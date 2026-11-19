@@ -1,0 +1,59 @@
+{
+    "formatVersion": 1,
+    "menu": {
+        "Config.tabAllgemein": {
+            "label": "Config.tabAllgemein",
+            "formFields": {
+                "aktiv": {
+                    "type": "checkBox",
+                    "required": false,
+                    "label": "Config.aktivLabel",
+                    "options": {
+                        "tooltip": "Config.aktivTooltip",
+                        "defaultValue": "false"
+                    }
+                },
+                "testKundenklassenIds": {
+                    "type": "inputText",
+                    "required": false,
+                    "label": "Config.testKundenklassenIdsLabel",
+                    "options": {
+                        "tooltip": "Config.testKundenklassenIdsTooltip",
+                        "defaultValue": ""
+                    }
+                },
+                "ausloeserVariationId": {
+                    "type": "inputText",
+                    "required": false,
+                    "label": "Config.ausloeserVariationIdLabel",
+                    "options": {
+                        "tooltip": "Config.ausloeserVariationIdTooltip",
+                        "defaultValue": ""
+                    }
+                },
+                "geschenkVariationId": {
+                    "type": "inputText",
+                    "required": false,
+                    "label": "Config.geschenkVariationIdLabel",
+                    "options": {
+                        "tooltip": "Config.geschenkVariationIdTooltip",
+                        "defaultValue": ""
+                    }
+                },
+                "preisModus": {
+                    "type": "selectBox",
+                    "required": false,
+                    "label": "Config.preisModusLabel",
+                    "options": {
+                        "tooltip": "Config.preisModusTooltip",
+                        "defaultValue": "variante",
+                        "selectBoxValues": [
+                            {"value": "variante",   "caption": "Config.preisModusVariante"},
+                            {"value": "givenPrice", "caption": "Config.preisModusGivenPrice"}
+                        ]
+                    }
+                }
+            }
+        }
+    }
+}
