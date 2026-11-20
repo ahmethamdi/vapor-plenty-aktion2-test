@@ -1,5 +1,10 @@
 # Release Notes für VaporAktion2Test
 
+## v0.2.2 (2026-11-20)
+
+### Behoben
+- Geschenk-Auswahl zeigt den Sortennamen (vorher nur „– 10 mg/ml“).
+
 ## v0.2.1 (2026-11-20)
 
 ### Behoben

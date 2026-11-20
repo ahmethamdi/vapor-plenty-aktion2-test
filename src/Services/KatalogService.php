@@ -116,6 +116,7 @@ class KatalogService
             'variation.name',
             'variation.number',
             'texts.name1',
+            'texts.*',
             'attributes.attribute.names.*',
             'attributes.value.names.*',
         ])
@@ -151,7 +152,15 @@ class KatalogService
             return null;
         }
 
-        $name = trim((string)($d['texts']['name1'] ?? ''));
+        // texts tek nesne ya da dil listesi olarak gelebilir (20.11.: Lostmary'de name1 boş geldi → "– 10 mg/ml")
+        $texte = $d['texts'] ?? [];
+        if (is_array($texte) && isset($texte[0]) && is_array($texte[0])) {
+            $texte = $texte[0];
+        }
+        $name = trim((string)($texte['name1'] ?? ''));
+        if ($name === '') {
+            $name = trim((string)($d['variation']['name'] ?? ''));
+        }
         $werte = [];
         if (isset($d['attributes']) && is_array($d['attributes'])) {
             foreach ($d['attributes'] as $attr) {
@@ -163,8 +172,6 @@ class KatalogService
         }
         if (count($werte) > 0) {
             $name = trim($name . ' – ' . implode(' / ', $werte));
-        } elseif (trim((string)($d['variation']['name'] ?? '')) !== '') {
-            $name = trim($name . ' ' . trim((string)$d['variation']['name']));
         }
         if ($name === '') {
             $name = (string)($d['variation']['number'] ?? $variationId);
