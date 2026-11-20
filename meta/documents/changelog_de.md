@@ -1,5 +1,10 @@
 # Release Notes für VaporAktion2Test
 
+## v0.2.4 (2026-11-20)
+
+### Behoben
+- Cache-Busting für JS/CSS (Browser lud die alte geschenk.js).
+
 ## v0.2.3 (2026-11-20)
 
 ### Behoben

@@ -1,5 +1,10 @@
 # Release notes for VaporAktion2Test
 
+## v0.2.4 (2026-11-20)
+
+### Fixed
+- Cache busting for JS/CSS (browser kept the old geschenk.js).
+
 ## v0.2.3 (2026-11-20)
 
 ### Fixed
