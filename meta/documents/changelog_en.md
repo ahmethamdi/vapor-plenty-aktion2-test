@@ -1,5 +1,10 @@
 # Release notes for VaporAktion2Test
 
+## v0.2.1 (2026-11-20)
+
+### Fixed
+- Deployment failed: `new` is not allowed in Plenty plugins (Einstellungen::ausArray now uses pluginApp).
+
 ## v0.2.0 (2026-11-20)
 
 ### Changed

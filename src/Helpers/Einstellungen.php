@@ -52,7 +52,9 @@ class Einstellungen
      */
     public static function ausArray(array $werte): self
     {
-        $e = new self();
+        // Plenty "allowedCalls": new/clone yasak → kapsayıcıdan al
+        /** @var self $e */
+        $e = pluginApp(self::class);
         $e->aktiv                  = self::bool($werte['aktiv'] ?? false, false);
         $e->testmodus              = self::bool($werte['testmodus'] ?? true, true);
         $e->testKontaktIds         = self::idListe($werte['testKontaktIds'] ?? '');

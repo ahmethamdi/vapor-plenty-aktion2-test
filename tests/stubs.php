@@ -134,6 +134,9 @@ namespace {
         if ($klasse === \IO\Services\BasketService::class) {
             return new \IO\Services\BasketService();
         }
+        if (strpos($klasse, 'VaporAktion2Test\\') === 0) {
+            return new $klasse();
+        }
         throw new \RuntimeException('pluginApp: ' . $klasse);
     }
 
