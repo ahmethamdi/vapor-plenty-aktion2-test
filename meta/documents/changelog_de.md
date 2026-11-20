@@ -1,5 +1,9 @@
 # Release Notes für VaporAktion2Test
 
+## v0.2.5 (2026-11-20)
+
+- Fehlt das CSRF-Token auf der Seite, wird die Seite neu geladen statt eine Anfrage ohne Token zu senden (500 + Abmeldung).
+
 ## v0.2.4 (2026-11-20)
 
 ### Behoben

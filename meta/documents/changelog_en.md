@@ -1,5 +1,9 @@
 # Release notes for VaporAktion2Test
 
+## v0.2.5 (2026-11-20)
+
+- If the CSRF token is missing on the page, the page is reloaded instead of sending a request without token (500 + logout).
+
 ## v0.2.4 (2026-11-20)
 
 ### Fixed

@@ -44,6 +44,12 @@
     }
 
     function anfrage(methode, daten, fertig) {
+        // 20.11.: Ohne #csrf-token antwortet Plenty mit 500 "CSRF token mismatch" und meldet den Kunden ab.
+        // Dann nicht senden, sondern die Seite neu laden – danach ist das Token da.
+        if (methode !== "GET" && !csrf()) {
+            window.location.reload();
+            return;
+        }
         var kopf = { "X-CSRF-TOKEN": csrf(), "X-Requested-With": "XMLHttpRequest", "Accept": "application/json", "Accept-Language": (window.App && window.App.language) || "de" };
         // 20.11.: NICHT über jQuery – plentyShop setzt X-CSRF-TOKEN per ajaxSetup selbst, unser Header kam doppelt
         // ("t, t") → Token-Fehler → 500 + "aus Sicherheitsgründen abgemeldet". fetch sendet den Header genau einmal.
