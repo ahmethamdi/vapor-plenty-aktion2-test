@@ -37,7 +37,7 @@ Her hediye grubu için **bir** kampanya. Yol: **Aufträge » Gutscheine** (Gutsc
 
 Kampanyayı kaydet → **Code**'u kopyala (16 karakter) → 3. adımdaki ayara yapıştır.
 
-Hazır test kodu (ELFX): **`3NQNNFWCT3D99KK2`** — item 14359, 16,99 €, yalnız Lostmary, 22.11.2026'ya kadar geçerli. Bu kod ELFX ayarı için hemen kullanılabilir; ELFLIQ için yeni kampanya aç.
+Hazır test kodu (ELFX): **`<ELFX-Gutscheincode aus Plenty>`** — item 14359, 16,99 €, yalnız Lostmary, 22.11.2026'ya kadar geçerli. Bu kod ELFX ayarı için hemen kullanılabilir; ELFLIQ için yeni kampanya aç.
 
 Notlar:
 - Plenty sepetinde aynı anda **tek kupon** olur. Müşterinin başka kuponu varsa hediye seçilemez (kutuda „Aktion nicht mit anderen Gutscheinen kombinierbar“).
@@ -66,7 +66,7 @@ Plugin-Set » VaporAktion2Test » **Konfiguration**.
 | Aktions-Artikel (Variations-IDs) | boş (tek tek varyasyon gerekiyorsa buraya) |
 | Geschenk ELFX (Artikel-IDs) | **14359** |
 | ELFLIQ als Geschenk | **evet** |
-| Gutscheincode ELFX | **3NQNNFWCT3D99KK2** (ya da yeni kampanyanın kodu) |
+| Gutscheincode ELFX | **<ELFX-Gutscheincode aus Plenty>** (ya da yeni kampanyanın kodu) |
 | Gutscheincode ELFLIQ | ELFLIQ kampanyasının kodu |
 
 Lostmary'de ölçülen: ELFLIQ **87138** (ELF-DFBLB-10, 10 mg) sepete 8,4901 € ile giriyor; **87139** (20 mg) bağlı ama stok negatif → seçim listesinde görünmez (satılabilir değil), ama müşteri sepetine koyabildiyse sayıma girer. ELFX **7880** (silver blue) aktif + stoklu.
