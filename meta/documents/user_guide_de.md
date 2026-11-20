@@ -1,26 +1,29 @@
-# VaporAktion2Test
-
-Testplugin, das eine einzige Frage beantwortet: Kann ein Plugin eine Variation mit 0,00 € als echte Warenkorbposition anlegen, und landet diese Position mit 0,00 € im Auftrag?
+# VaporAktion2Test – Aktion „Kaufe 6 ELFLIQ, erhalte 1 Geschenk gratis“
 
 ## Funktionsweise
 
-Nach jeder Warenkorbänderung (Ereignis `AfterBasketChanged`) prüft das Plugin:
-
-1. Ist **Aktion aktiv** eingeschaltet und ist der Kunde eingeloggt und in einer der **Test-Kundenklassen**? Wenn nicht, passiert nichts.
-2. Liegt die **Auslöser-Variation** im Warenkorb, wird die **Geschenk-Variation** mit Menge 1 hinzugefügt.
-3. Wird der Auslöser entfernt, wird auch das Geschenk entfernt.
-4. Die Menge des Geschenks bleibt immer 1.
+- Liegen mindestens **N Aktions-Artikel** (Standard 6, Sorten beliebig gemischt) im Warenkorb, erscheint im Warenkorb eine Auswahl: **ELFX Pod Kit** (Farbe) oder **1 ELFLIQ** (Sorte/Stärke).
+- Das Geschenk kommt als echte Position zum Normalpreis in den Warenkorb, das Plugin löst gleichzeitig den passenden **Aktionsgutschein** (Festbetrag = Preis des Geschenks) ein. Ergebnis: Geschenk 0,00 €.
+- Max. 1 Geschenk pro Bestellung. Menge des ELFX-Geschenks immer 1.
+- Fallen die Aktions-Artikel unter N, werden Geschenk und Gutschein automatisch entfernt.
+- Liegt ein anderer Gutschein im Warenkorb, kann kein Geschenk gewählt werden („Aktion nicht mit anderen Gutscheinen kombinierbar“).
+- Liegt einer der Aktions-Gutscheincodes ohne Berechtigung im Warenkorb, entfernt das Plugin ihn (für alle Kunden).
+- Vor der Zahlung (ValidateCheckoutEvent) wird nochmals geprüft; wurde der Warenkorb angepasst, wird der Kunde informiert.
 
 ## Einstellungen
 
 | Einstellung | Bedeutung |
 |---|---|
-| Aktion aktiv | Standard: aus |
-| Test-Kundenklassen | IDs, kommagetrennt. Leer = Plugin tut nichts |
-| Auslöser-Variations-ID | Variation, die das Geschenk auslöst |
-| Geschenk-Variations-ID | Variation, die als Geschenk hinzugefügt wird (muss sich vom Auslöser unterscheiden) |
-| Preis-Modus | „Variante“: Geschenk-Variation hat selbst 0,00 € als Verkaufspreis. „givenPrice“: Experiment, das Plugin übergibt `givenPrice = 0` |
+| Aktion aktiv | Standard aus |
+| Testmodus | Standard an: nur Test-Kunden / Test-Kundenklassen |
+| Benötigte Menge | Standard 6 |
+| Aktions-Artikel (Artikel-IDs / Variations-IDs) | zählen für die Aktion; auch als ELFLIQ-Geschenk wählbar |
+| Geschenk ELFX (Artikel-IDs) | wählbare Geräte (nur aktiv, sichtbar, verkäuflich) |
+| ELFLIQ als Geschenk | an/aus |
+| Gutscheincode ELFX / ELFLIQ | Codes der im Backend angelegten Aktionsgutscheine |
 
-## Protokoll
+## Container-Verknüpfungen
 
-Einträge erscheinen unter **Daten » Log** mit der Integration **VaporAktion2Test** (Level *Report*, standardmäßig sichtbar).
+- „Aktion 2: Script (Pflicht)“ → `Ceres::Script.AfterScriptsLoaded`
+- „Aktion 2: Geschenk-Box Warenkorb“ → `Ceres::Basket.BeforeBasketTotals`
+- „Aktion 2: Geschenk-Box Warenkorb-Vorschau“ → `Ceres::BasketPreview.BeforeBasketTotals`

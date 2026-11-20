@@ -4,27 +4,38 @@ namespace VaporAktion2Test\Services;
 
 use Plenty\Modules\Basket\Contracts\BasketItemRepositoryContract;
 use Plenty\Modules\Basket\Contracts\BasketRepositoryContract;
+use Plenty\Modules\Basket\Models\Basket;
 use Plenty\Modules\Basket\Models\BasketItem;
 use Plenty\Modules\Webshop\Contracts\ContactRepositoryContract;
+use Plenty\Modules\Webshop\Contracts\SessionStorageRepositoryContract;
 use Plenty\Plugin\ConfigRepository;
 use Plenty\Plugin\Log\Loggable;
+use Plenty\Plugin\Translation\Translator;
+use VaporAktion2Test\Helpers\Einstellungen;
+use VaporAktion2Test\Helpers\Regel;
 
 /**
- * Hediye kuralı:
- *  - Eklenti aktif + giriş yapmış müşteri test müşteri sınıfında DEĞİLSE: hiçbir şey yapma.
- *  - Sepette tetikleyici varyasyon varsa: hediye varyasyonu 1 adet ekle (yoksa).
- *  - Tetikleyici yoksa: hediye satır(lar)ını sil.
- *  - Hediye adedi her zaman 1; fazladan hediye satırları silinir.
- *  - Hediye satırının sepetteki fiyatı loglanır (asıl test sorusu: 0,00 € mu?).
+ * "6 Aktions-Artikel al → 1 hediye" kampanyasını Plenty sepetinde yürütür.
+ *
+ * Hediye = gerçek varyasyon, tam fiyatla sepette + panelde açılmış Aktionsgutschein (Festbetrag = hediye fiyatı,
+ * Artikel filtresi = hediye ürünü). 20.11.2026 canlı testinde kanıtlanan tek çalışan yol bu.
+ *
+ * Giriş noktaları:
+ *  - pruefen():   AfterBasketChanged / ValidateCheckoutEvent / durum sorgusu → sepeti kurala uydur
+ *  - status():    sepet kutusu için durum + seçenekler + metinler
+ *  - waehlen():   müşteri hediye seçti/değiştirdi
+ *  - entfernen(): müşteri hediyeyi kaldırdı
+ *
+ * Kural: hata asla sepeti bozmamalı → her yol try/catch, hata loglanır, sessizce çıkılır.
  */
 class GeschenkService
 {
     use Loggable;
 
-    const MODUS_VARIANTE    = 'variante';
-    const MODUS_GIVEN_PRICE = 'givenPrice';
+    const SESSION_SCHLUESSEL = 'VaporAktion2Test_geschenk';
+    const PLUGIN             = 'VaporAktion2Test';
 
-    /** @var bool Kendi ekleme/silme işlemlerimiz yeni AfterBasketChanged ateşler → döngü kilidi */
+    /** @var bool Kendi sepet işlemlerimiz yeni AfterBasketChanged ateşler → döngü kilidi */
     private $laeuft = false;
 
     /** @var ConfigRepository */
@@ -39,245 +50,569 @@ class GeschenkService
     /** @var ContactRepositoryContract */
     private $contactRepository;
 
+    /** @var SessionStorageRepositoryContract */
+    private $sessionStorage;
+
+    /** @var KatalogService */
+    private $katalog;
+
+    /** @var Einstellungen|null */
+    private $einstellungen = null;
+
     public function __construct(
         ConfigRepository $config,
         BasketItemRepositoryContract $basketItemRepository,
         BasketRepositoryContract $basketRepository,
-        ContactRepositoryContract $contactRepository
+        ContactRepositoryContract $contactRepository,
+        SessionStorageRepositoryContract $sessionStorage,
+        KatalogService $katalog
     ) {
         $this->config               = $config;
         $this->basketItemRepository = $basketItemRepository;
         $this->basketRepository     = $basketRepository;
         $this->contactRepository    = $contactRepository;
+        $this->sessionStorage       = $sessionStorage;
+        $this->katalog              = $katalog;
     }
 
-    public function pruefen()
+    // ------------------------------------------------------------------
+    // Giriş noktaları
+    // ------------------------------------------------------------------
+
+    /**
+     * Sepeti kurala uydur.
+     * @return bool true = sepet içeriği/kuponu müşteri aleyhine ya da lehine değişti (kasada uyarı gerekir)
+     */
+    public function pruefen(string $anlass = 'warenkorb'): bool
     {
         if ($this->laeuft) {
-            return;
-        }
-
-        if (!$this->istAktiv()) {
-            return;
-        }
-
-        $klassen  = $this->idListe('VaporAktion2Test.testKundenklassenIds');
-        $kontakte = $this->idListe('VaporAktion2Test.testKontaktIds');
-        if (count($klassen) === 0 && count($kontakte) === 0) {
-            // İki liste de boş = hiç çalışma (güvenlik varsayılanı)
-            return;
-        }
-
-        $kontaktId = (int)$this->contactRepository->getContactId();
-        if ($kontaktId <= 0) {
-            return; // misafir: hiçbir zaman
-        }
-
-        // Test müşteri numarası ya da test müşteri sınıfı (sınıf değiştirmek ürün görünürlüğünü bozabildiği için
-        // müşteri numarası tercih edilir — 20.11.2026 Lostmary'de sınıf 61 ürünleri gizledi)
-        $klasseId = (int)$this->contactRepository->getContactClassId();
-        if (!in_array($kontaktId, $kontakte, true) && !in_array($klasseId, $klassen, true)) {
-            return;
-        }
-
-        $ausloeserId = (int)$this->config->get('VaporAktion2Test.ausloeserVariationId');
-        $geschenkId  = (int)$this->config->get('VaporAktion2Test.geschenkVariationId');
-        $modus       = $this->preisModus();
-
-        $kontext = [
-            'kontaktId'      => $kontaktId,
-            'kundenklasseId' => $klasseId,
-            'ausloeserId'    => $ausloeserId,
-            'geschenkId'     => $geschenkId,
-            'modus'          => $modus,
-        ];
-
-        if ($ausloeserId <= 0 || $geschenkId <= 0 || $ausloeserId === $geschenkId) {
-            $this->getLogger('GeschenkService_pruefen')
-                ->error('VaporAktion2Test::Log.konfigurationUngueltig', $kontext);
-            return;
+            return false;
         }
 
         $this->laeuft = true;
         try {
-            $this->anwenden($ausloeserId, $geschenkId, $modus, $kontext);
-        } catch (\Throwable $e) {
-            $kontext['meldung'] = $e->getMessage();
-            $kontext['code']    = $e->getCode();
-            $kontext['klasse']  = get_class($e);
-            $this->getLogger('GeschenkService_pruefen')
-                ->error('VaporAktion2Test::Log.fehler', $kontext);
+            return $this->abgleichen($anlass);
+        } catch (\Throwable $ex) {
+            $this->fehlerLoggen('GeschenkService_pruefen', $ex, ['anlass' => $anlass]);
+            return false;
         } finally {
             $this->laeuft = false;
         }
     }
 
-    private function anwenden(int $ausloeserId, int $geschenkId, string $modus, array $kontext)
+    /**
+     * Sepet kutusu için durum.
+     */
+    public function status(): array
     {
-        $hatAusloeser    = false;
-        $geschenkZeilen  = [];
+        $this->pruefen('status');
 
-        /** @var BasketItem $zeile */
-        foreach ($this->basketItemRepository->all() as $zeile) {
-            $variationId = (int)$zeile->variationId;
-            if ($variationId === $ausloeserId && (float)$zeile->quantity > 0) {
-                $hatAusloeser = true;
-            }
-            if ($variationId === $geschenkId) {
-                $geschenkZeilen[] = $zeile;
-            }
+        try {
+            return $this->statusBauen('');
+        } catch (\Throwable $ex) {
+            $this->fehlerLoggen('GeschenkService_status', $ex, []);
+            return ['sichtbar' => false];
         }
-
-        // 1) Tetikleyici yok → tüm hediye satırlarını sil
-        if (!$hatAusloeser) {
-            foreach ($geschenkZeilen as $zeile) {
-                $this->basketItemRepository->removeBasketItem((int)$zeile->id);
-                $this->getLogger('GeschenkService_entfernen')
-                    ->report('VaporAktion2Test::Log.geschenkEntfernt', $kontext + ['basketItemId' => (int)$zeile->id]);
-            }
-            return;
-        }
-
-        // 2) Tetikleyici var, hediye yok → ekle
-        if (count($geschenkZeilen) === 0) {
-            $daten = $this->zeilenDaten($geschenkId, $modus);
-            try {
-                $neu = $this->basketItemRepository->addBasketItem($daten);
-            } catch (\Throwable $e) {
-                $this->getLogger('GeschenkService_hinzufuegen')
-                    ->error('VaporAktion2Test::Log.hinzufuegenFehlgeschlagen', $kontext + [
-                        'daten'   => $daten,
-                        'meldung' => $e->getMessage(),
-                        'code'    => $e->getCode(),
-                        'klasse'  => get_class($e),
-                    ]);
-                return;
-            }
-
-            $this->getLogger('GeschenkService_hinzufuegen')
-                ->report('VaporAktion2Test::Log.geschenkHinzugefuegt', $kontext + [
-                    'daten' => $daten,
-                    'zeile' => $this->zeilenInfo($neu),
-                ]);
-
-            // Kayıttan yeniden oku: fiyat, sepet toplamı hesaplandıktan sonra ne oldu?
-            $this->preisProtokollieren((int)$neu->id, $kontext);
-            return;
-        }
-
-        // 3) Hediye var → ilk satır kalır, adet 1; fazlası silinir
-        $erste = array_shift($geschenkZeilen);
-        foreach ($geschenkZeilen as $zeile) {
-            $this->basketItemRepository->removeBasketItem((int)$zeile->id);
-            $this->getLogger('GeschenkService_doppelt')
-                ->report('VaporAktion2Test::Log.geschenkDoppeltEntfernt', $kontext + ['basketItemId' => (int)$zeile->id]);
-        }
-
-        if ((float)$erste->quantity !== 1.0) {
-            $daten = $this->zeilenDaten($geschenkId, $modus);
-            $daten['id'] = (int)$erste->id;
-            $this->basketItemRepository->updateBasketItem((int)$erste->id, $daten);
-            $this->getLogger('GeschenkService_menge')
-                ->report('VaporAktion2Test::Log.geschenkMengeKorrigiert', $kontext + [
-                    'basketItemId' => (int)$erste->id,
-                    'mengeVorher'  => (float)$erste->quantity,
-                ]);
-        }
-
-        $this->preisProtokollieren((int)$erste->id, $kontext);
     }
 
     /**
-     * addBasketItem/updateBasketItem için veri.
-     * IO BasketService::addDataToBasket de variationId, quantity, referrerId gönderiyor.
+     * Müşteri bir hediye seçti (ya da mevcut hediyeyi değiştirdi).
      */
-    private function zeilenDaten(int $geschenkId, string $modus): array
+    public function waehlen(int $variationId): array
     {
-        $daten = [
-            'variationId' => $geschenkId,
-            'quantity'    => 1,
-            'referrerId'  => $this->basketRepository->load()->referrerId,
+        if ($this->laeuft) {
+            return $this->antwort(false, 'fehlerAllgemein');
+        }
+
+        $this->laeuft = true;
+        try {
+            $meldung = $this->waehlenIntern($variationId);
+        } catch (\Throwable $ex) {
+            $this->fehlerLoggen('GeschenkService_waehlen', $ex, ['variationId' => $variationId]);
+            $meldung = 'fehlerAllgemein';
+        } finally {
+            $this->laeuft = false;
+        }
+
+        return $this->antwort($meldung === 'erfolg', $meldung);
+    }
+
+    /**
+     * Müşteri hediyeyi kaldırdı: hediye satırı (ELFLIQ'te 1 adet) + kupon + oturum kaydı.
+     */
+    public function entfernen(): array
+    {
+        if ($this->laeuft) {
+            return $this->antwort(false, 'fehlerAllgemein');
+        }
+
+        $this->laeuft = true;
+        try {
+            $geschenk = $this->geschenkLesen();
+            if ($geschenk !== null) {
+                $this->geschenkAusWarenkorb($geschenk, $this->zeilen());
+                $this->geschenkVergessen();
+                $this->unserenGutscheinEntfernen();
+                $this->getLogger('GeschenkService_entfernen')
+                    ->report(self::PLUGIN . '::Log.geschenkVomKundenEntfernt', $this->kontext() + ['geschenk' => $geschenk]);
+            }
+        } catch (\Throwable $ex) {
+            $this->fehlerLoggen('GeschenkService_entfernen', $ex, []);
+        } finally {
+            $this->laeuft = false;
+        }
+
+        return $this->antwort(true, '');
+    }
+
+    // ------------------------------------------------------------------
+    // Kural uygulama
+    // ------------------------------------------------------------------
+
+    private function abgleichen(string $anlass): bool
+    {
+        $e        = $this->einstellungen();
+        $geschenk = $this->geschenkLesen();
+        $basket   = $this->basketRepository->load();
+        $coupon   = $basket instanceof Basket ? (string)$basket->couponCode : '';
+
+        // Hızlı çıkış: eklenti kapalı, oturumda hediye yok, sepetteki kupon bizim değil → hiçbir şey yapma
+        if (!$e->aktiv && $geschenk === null && !$e->istUnserCode($coupon)) {
+            return false;
+        }
+
+        $darf      = $this->darfTeilnehmen($e);
+        $zeilen    = $this->zeilen();
+        $bewertung = Regel::bewerten($e, $darf, $zeilen, $geschenk, $coupon);
+
+        if (count($bewertung['aktionen']) === 0) {
+            return false;
+        }
+
+        $kontext = $this->kontext() + [
+            'anlass'       => $anlass,
+            'grund'        => $bewertung['grund'],
+            'aktionsMenge' => $bewertung['aktionsMenge'],
+            'bezahlt'      => $bewertung['bezahlt'],
+            'benoetigt'    => $bewertung['benoetigt'],
+            'coupon'       => $coupon,
+            'geschenk'     => $geschenk,
+            'aktionen'     => $bewertung['aktionen'],
         ];
 
-        if ($modus === self::MODUS_GIVEN_PRICE) {
-            // Deney: BasketItem modelindeki givenPrice/useGivenPrice alanları
-            // ("The given item price" / "The flag to use the given values").
-            // Core'un bunu webshop sepetinde dikkate alıp almadığı belgelenmemiş → log söyleyecek.
-            $daten['givenPrice']    = 0.0;
-            $daten['useGivenPrice'] = true;
-        }
+        $geaendert = $this->ausfuehren($bewertung['aktionen'], $zeilen, $kontext);
 
-        return $daten;
+        $this->getLogger('GeschenkService_abgleichen')
+            ->report(self::PLUGIN . '::Log.' . $bewertung['grund'], $kontext + ['geaendert' => $geaendert]);
+
+        return $geaendert;
     }
 
-    private function preisProtokollieren(int $basketItemId, array $kontext)
+    /**
+     * Regel'in işlem listesini Plenty'de yürüt. Her işlem kendi try/catch'inde: biri patlarsa diğerleri yine denenir.
+     * @return bool Sepet içeriği ya da kupon değişti mi (yalnız oturum kaydını unutmak sayılmaz)
+     */
+    private function ausfuehren(array $aktionen, array $zeilen, array $kontext): bool
     {
-        $zeile = $this->basketItemRepository->findOneById($basketItemId);
-        if (!$zeile instanceof BasketItem) {
+        $geaendert = false;
+
+        foreach ($aktionen as $aktion) {
+            try {
+                switch ($aktion['typ']) {
+                    case Regel::AKTION_ZEILE_ENTFERNEN:
+                        $this->basketItemRepository->removeBasketItem((int)$aktion['zeilenId']);
+                        $geaendert = true;
+                        break;
+
+                    case Regel::AKTION_MENGE_SETZEN:
+                        $this->mengeSetzen((int)$aktion['zeilenId'], (int)$aktion['variationId'], (float)$aktion['menge']);
+                        $geaendert = true;
+                        break;
+
+                    case Regel::AKTION_GUTSCHEIN_WEG:
+                        $this->basketRepository->removeCouponCode();
+                        $geaendert = true;
+                        break;
+
+                    case Regel::AKTION_GUTSCHEIN_SETZEN:
+                        if (!$this->gutscheinSetzen((string)$aktion['code'])) {
+                            // Kupon tutmadı: hediye tam fiyatla kalmasın
+                            $geschenk = $this->geschenkLesen();
+                            if ($geschenk !== null) {
+                                $this->geschenkAusWarenkorb($geschenk, $this->zeilen());
+                                $this->geschenkVergessen();
+                            }
+                            $this->unserenGutscheinEntfernen();
+                            $this->getLogger('GeschenkService_ausfuehren')
+                                ->error(self::PLUGIN . '::Log.gutscheinFehlgeschlagenGeschenkEntfernt', $kontext);
+                            $geaendert = true;
+                        }
+                        break;
+
+                    case Regel::AKTION_VERGESSEN:
+                        $this->geschenkVergessen();
+                        break;
+                }
+            } catch (\Throwable $ex) {
+                $this->fehlerLoggen('GeschenkService_ausfuehren', $ex, $kontext + ['aktion' => $aktion]);
+            }
+        }
+
+        return $geaendert;
+    }
+
+    private function waehlenIntern(int $variationId): string
+    {
+        $e = $this->einstellungen();
+        $darf = $this->darfTeilnehmen($e);
+        if (!$e->aktiv || !$darf || $variationId <= 0) {
+            return 'fehlerNichtVerfuegbar';
+        }
+
+        // Önce sepeti kurala uydur (eski, geçersiz hediye vb. temizlensin)
+        $this->abgleichen('waehlen');
+
+        $option = $this->katalog->optionFinden($e, $variationId);
+        if ($option === null) {
+            $this->getLogger('GeschenkService_waehlen')
+                ->info(self::PLUGIN . '::Log.optionUngueltig', $this->kontext() + ['variationId' => $variationId]);
+            return 'fehlerNichtVerfuegbar';
+        }
+
+        $basket = $this->basketRepository->load();
+        $coupon = $basket instanceof Basket ? (string)$basket->couponCode : '';
+        $zeilen = $this->zeilen();
+        $alt    = $this->geschenkLesen();
+
+        $fehler = Regel::wahlPruefen($e, $darf, $zeilen, $alt, $coupon, $option);
+        if ($fehler !== '') {
+            $this->getLogger('GeschenkService_waehlen')
+                ->info(self::PLUGIN . '::Log.wahlAbgelehnt', $this->kontext() + [
+                    'variationId' => $variationId,
+                    'fehler'      => $fehler,
+                    'coupon'      => $coupon,
+                ]);
+            return $fehler;
+        }
+
+        if ($alt !== null && $alt['variationId'] === $option['variationId'] && $alt['gruppe'] === $option['gruppe']) {
+            return 'erfolg'; // aynı hediye zaten sepette
+        }
+
+        // Eski hediyeyi çıkar
+        if ($alt !== null) {
+            $this->geschenkAusWarenkorb($alt, $zeilen);
+            $this->geschenkVergessen();
+            $this->unserenGutscheinEntfernen();
+        }
+
+        // Yeni hediyeyi IO üzerinden ekle (IO paket bölme, aynı varyasyonu birleştirme ve stok kontrolünü yapar)
+        /** @var \IO\Services\BasketService $ioBasket */
+        $ioBasket = pluginApp(\IO\Services\BasketService::class);
+        $sonuc    = $ioBasket->addBasketItem(['variationId' => $option['variationId'], 'quantity' => 1]);
+        if (is_array($sonuc) && array_key_exists('code', $sonuc)) {
+            $this->getLogger('GeschenkService_waehlen')
+                ->error(self::PLUGIN . '::Log.hinzufuegenFehlgeschlagen', $this->kontext() + [
+                    'option' => $option,
+                    'code'   => $sonuc['code'],
+                ]);
+            return 'fehlerHinzufuegen';
+        }
+
+        $geschenk = ['variationId' => $option['variationId'], 'gruppe' => $option['gruppe']];
+        $this->geschenkSchreiben($geschenk);
+
+        if (!$this->gutscheinSetzen($e->codeFuerGruppe($option['gruppe']))) {
+            $this->geschenkAusWarenkorb($geschenk, $this->zeilen());
+            $this->geschenkVergessen();
+            $this->unserenGutscheinEntfernen();
+            $this->getLogger('GeschenkService_waehlen')
+                ->error(self::PLUGIN . '::Log.gutscheinFehlgeschlagenGeschenkEntfernt', $this->kontext() + ['option' => $option]);
+            return 'fehlerGutschein';
+        }
+
+        $this->getLogger('GeschenkService_waehlen')
+            ->report(self::PLUGIN . '::Log.geschenkGewaehlt', $this->kontext() + [
+                'option'  => $option,
+                'vorher'  => $alt,
+            ]);
+
+        return 'erfolg';
+    }
+
+    /**
+     * Kupon kodunu sepete uygula ve gerçekten indirim doğurduğunu doğrula.
+     */
+    private function gutscheinSetzen(string $code): bool
+    {
+        $code = Einstellungen::code($code);
+        if ($code === '') {
+            return false;
+        }
+
+        try {
+            $basket = $this->basketRepository->setCouponCode($code);
+        } catch (\Throwable $ex) {
+            $this->fehlerLoggen('GeschenkService_gutscheinSetzen', $ex, ['code' => $code]);
+            return false;
+        }
+
+        if (!$basket instanceof Basket) {
+            $basket = $this->basketRepository->load();
+        }
+
+        $gesetzt  = $basket instanceof Basket ? Einstellungen::code($basket->couponCode) : '';
+        $rabatt   = $basket instanceof Basket ? abs((float)$basket->couponDiscount) : 0.0;
+
+        if ($gesetzt !== $code || $rabatt <= 0.0) {
+            $this->getLogger('GeschenkService_gutscheinSetzen')
+                ->error(self::PLUGIN . '::Log.gutscheinOhneWirkung', $this->kontext() + [
+                    'code'       => $code,
+                    'imKorb'     => $gesetzt,
+                    'rabatt'     => $rabatt,
+                ]);
+            return false;
+        }
+
+        return true;
+    }
+
+    /** Sepetteki kupon bizimse kaldır (yabancı kupona dokunma). */
+    private function unserenGutscheinEntfernen()
+    {
+        $basket = $this->basketRepository->load();
+        $coupon = $basket instanceof Basket ? (string)$basket->couponCode : '';
+        if ($this->einstellungen()->istUnserCode($coupon)) {
+            $this->basketRepository->removeCouponCode();
+        }
+    }
+
+    /** Hediyeyi sepetten çıkar (ELFLIQ: 1 adet azalt; ELFX: satırı sil). */
+    private function geschenkAusWarenkorb(array $geschenk, array $zeilen)
+    {
+        $zeile = Regel::zeileFinden($zeilen, (int)$geschenk['variationId']);
+        if ($zeile === null) {
             return;
         }
-
-        $info = $kontext + ['zeile' => $this->zeilenInfo($zeile)];
-
-        if ((float)$zeile->price > 0) {
-            $this->getLogger('GeschenkService_preis')
-                ->warning('VaporAktion2Test::Log.geschenkPreisNichtNull', $info);
-            // warning kapalıysa da görünsün diye report ile de yaz
-            $this->getLogger('GeschenkService_preis')
-                ->report('VaporAktion2Test::Log.geschenkPreisNichtNull', $info);
+        $aktion = Regel::geschenkEntfernenAktion($geschenk, $zeile);
+        if ($aktion['typ'] === Regel::AKTION_MENGE_SETZEN) {
+            $this->mengeSetzen((int)$aktion['zeilenId'], (int)$aktion['variationId'], (float)$aktion['menge']);
         } else {
-            $this->getLogger('GeschenkService_preis')
-                ->report('VaporAktion2Test::Log.geschenkPreisNull', $info);
+            $this->basketItemRepository->removeBasketItem((int)$aktion['zeilenId']);
         }
     }
 
-    private function zeilenInfo($zeile): array
+    private function mengeSetzen(int $zeilenId, int $variationId, float $menge)
     {
-        if (!$zeile instanceof BasketItem) {
-            return [];
+        $basket = $this->basketRepository->load();
+        $this->basketItemRepository->updateBasketItem($zeilenId, [
+            'id'          => $zeilenId,
+            'variationId' => $variationId,
+            'quantity'    => $menge,
+            'referrerId'  => $basket instanceof Basket ? $basket->referrerId : null,
+        ]);
+    }
+
+    // ------------------------------------------------------------------
+    // Durum (sepet kutusu)
+    // ------------------------------------------------------------------
+
+    private function statusBauen(string $meldung): array
+    {
+        $e = $this->einstellungen();
+        if (!$e->aktiv || !$this->darfTeilnehmen($e) || (!$e->elfxMoeglich() && !$e->elfliqMoeglich())) {
+            return ['sichtbar' => false];
+        }
+
+        $basket    = $this->basketRepository->load();
+        $coupon    = $basket instanceof Basket ? (string)$basket->couponCode : '';
+        $geschenk  = $this->geschenkLesen();
+        $bewertung = Regel::bewerten($e, true, $this->zeilen(), $geschenk, $coupon);
+
+        $optionen = [Einstellungen::GRUPPE_ELFX => [], Einstellungen::GRUPPE_ELFLIQ => []];
+        if ($bewertung['berechtigt'] && !$bewertung['fremderGutschein']) {
+            $optionen = $this->katalog->optionen($e);
+        }
+
+        $geschenkInfo = null;
+        if ($bewertung['geschenk'] !== null) {
+            $g = $bewertung['geschenk'];
+            $option = $this->katalog->optionFinden($e, $g['variationId']);
+            $geschenkInfo = [
+                'variationId' => $g['variationId'],
+                'gruppe'      => $g['gruppe'],
+                'name'        => $option !== null ? $option['name'] : '',
+                'preis'       => $option !== null ? $option['preis'] : '',
+            ];
         }
 
         return [
-            'id'            => $zeile->id,
-            'variationId'   => $zeile->variationId,
-            'itemType'      => $zeile->itemType,
-            'quantity'      => $zeile->quantity,
-            'price'         => $zeile->price,
-            'givenPrice'    => $zeile->givenPrice,
-            'useGivenPrice' => $zeile->useGivenPrice,
-            'rebate'        => $zeile->rebate,
-            'vat'           => $zeile->vat,
-            'priceId'       => $zeile->priceId,
-            'bundleVariationId' => $zeile->bundleVariationId,
+            'sichtbar'         => true,
+            'benoetigt'        => $bewertung['benoetigt'],
+            'bezahlt'          => $bewertung['bezahlt'],
+            'fehlt'            => $bewertung['fehlt'],
+            'berechtigt'       => $bewertung['berechtigt'],
+            'fremderGutschein' => $bewertung['fremderGutschein'],
+            'maxGeschenke'     => Einstellungen::MAX_GESCHENKE,
+            'geschenk'         => $geschenkInfo,
+            'optionen'         => $optionen,
+            'texte'            => $this->texte($bewertung),
+            'meldung'          => $meldung !== '' ? $this->text($meldung) : '',
         ];
     }
 
-    private function istAktiv(): bool
+    private function antwort(bool $ok, string $meldung): array
     {
-        $wert = $this->config->get('VaporAktion2Test.aktiv');
-        // checkBox değeri "true"/"1" gelebilir (IO PluginConfig ile aynı yorum)
-        return $wert === true || $wert === 'true' || $wert === '1' || $wert === 1;
+        try {
+            $status = $this->statusBauen($ok ? 'erfolg' : $meldung);
+        } catch (\Throwable $ex) {
+            $this->fehlerLoggen('GeschenkService_antwort', $ex, []);
+            $status = ['sichtbar' => false];
+        }
+        $status['ok'] = $ok;
+        if (!isset($status['meldung'])) {
+            $status['meldung'] = $meldung !== '' ? $this->text($meldung) : '';
+        }
+        return $status;
+    }
+
+    private function texte(array $bewertung): array
+    {
+        $fehlt = (int)$bewertung['fehlt'];
+        return [
+            'titel'              => $this->text('titel', ['anzahl' => $bewertung['benoetigt']]),
+            'nochFehlend'        => $fehlt === 1 ? $this->text('nochFehlendEins') : $this->text('nochFehlend', ['fehlt' => $fehlt]),
+            'fortschritt'        => $this->text('fortschritt', ['bezahlt' => $bewertung['bezahlt'], 'anzahl' => $bewertung['benoetigt']]),
+            'berechtigt'         => $this->text('berechtigt'),
+            'gruppeElfx'         => $this->text('gruppeElfx'),
+            'gruppeElfliq'       => $this->text('gruppeElfliq'),
+            'auswahlPlatzhalter' => $this->text('auswahlPlatzhalter'),
+            'hinzufuegen'        => $this->text('hinzufuegen'),
+            'deinGeschenk'       => $this->text('deinGeschenk'),
+            'gratis'             => $this->text('gratis'),
+            'statt'              => $this->text('statt'),
+            'aendern'            => $this->text('aendern'),
+            'entfernen'          => $this->text('entfernen'),
+            'abbrechen'          => $this->text('abbrechen'),
+            'fremderGutschein'   => $this->text('fremderGutschein'),
+            'keineOptionen'      => $this->text('keineOptionen'),
+            'hinweis'            => $this->text('hinweis'),
+            'laden'              => $this->text('laden'),
+            'fehlerAllgemein'    => $this->text('fehlerAllgemein'),
+        ];
+    }
+
+    private function text(string $schluessel, array $parameter = []): string
+    {
+        try {
+            /** @var Translator $translator */
+            $translator = pluginApp(Translator::class);
+            return (string)$translator->trans(self::PLUGIN . '::Frontend.' . $schluessel, $parameter);
+        } catch (\Throwable $ex) {
+            return $schluessel;
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Yardımcılar
+    // ------------------------------------------------------------------
+
+    public function einstellungen(): Einstellungen
+    {
+        if ($this->einstellungen === null) {
+            $werte = [];
+            foreach ([
+                'aktiv', 'testmodus', 'testKontaktIds', 'testKundenklassenIds', 'benoetigteMenge',
+                'aktionsArtikelIds', 'aktionsVariationIds', 'geschenkElfxArtikelIds', 'geschenkElfliqErlaubt',
+                'gutscheinElfx', 'gutscheinElfliq',
+            ] as $schluessel) {
+                $werte[$schluessel] = $this->config->get(self::PLUGIN . '.' . $schluessel);
+            }
+            $this->einstellungen = Einstellungen::ausArray($werte);
+        }
+        return $this->einstellungen;
     }
 
     /**
-     * "3, 7,12" → [3, 7, 12]; geçersiz parçalar atılır.
+     * Test modunda yalnız test kontakları / test müşteri sınıfları (giriş yapmış) katılır.
+     * Test modu kapalıysa herkes (misafir dahil).
      */
-    private function idListe(string $schluessel): array
+    public function darfTeilnehmen(Einstellungen $e): bool
     {
-        $roh = (string)$this->config->get($schluessel);
-        $ids = [];
-        foreach (explode(',', $roh) as $teil) {
-            $teil = trim($teil);
-            if ($teil !== '' && preg_match('/^[0-9]+$/', $teil) === 1 && (int)$teil > 0) {
-                $ids[] = (int)$teil;
-            }
+        if (!$e->testmodus) {
+            return true;
         }
-        return array_values(array_unique($ids));
+        $kontaktId = (int)$this->contactRepository->getContactId();
+        if ($kontaktId <= 0) {
+            return false;
+        }
+        if (in_array($kontaktId, $e->testKontaktIds, true)) {
+            return true;
+        }
+        $klasseId = (int)$this->contactRepository->getContactClassId();
+        return $klasseId > 0 && in_array($klasseId, $e->testKundenklassenIds, true);
     }
 
-    private function preisModus(): string
+    /** Sepet satırları, Regel'in beklediği sade biçimde. */
+    private function zeilen(): array
     {
-        $wert = (string)$this->config->get('VaporAktion2Test.preisModus');
-        return $wert === self::MODUS_GIVEN_PRICE ? self::MODUS_GIVEN_PRICE : self::MODUS_VARIANTE;
+        $zeilen = [];
+        foreach ($this->basketItemRepository->all() as $zeile) {
+            if (!$zeile instanceof BasketItem) {
+                continue;
+            }
+            $zeilen[] = [
+                'id'          => (int)$zeile->id,
+                'variationId' => (int)$zeile->variationId,
+                'itemId'      => (int)$zeile->itemId,
+                'menge'       => (float)$zeile->quantity,
+                'typ'         => (int)$zeile->itemType,
+            ];
+        }
+        return $zeilen;
+    }
+
+    private function geschenkLesen()
+    {
+        $roh = $this->sessionStorage->getSessionValue(self::SESSION_SCHLUESSEL);
+        if (!is_string($roh) || $roh === '') {
+            return null;
+        }
+        $daten = json_decode($roh, true);
+        return Regel::geschenkNormalisieren($daten);
+    }
+
+    private function geschenkSchreiben(array $geschenk)
+    {
+        $this->sessionStorage->setSessionValue(self::SESSION_SCHLUESSEL, json_encode($geschenk));
+    }
+
+    private function geschenkVergessen()
+    {
+        $this->sessionStorage->setSessionValue(self::SESSION_SCHLUESSEL, '');
+    }
+
+    private function kontext(): array
+    {
+        $kontaktId = 0;
+        try {
+            $kontaktId = (int)$this->contactRepository->getContactId();
+        } catch (\Throwable $ex) {
+            // log bağlamı için; hata önemsiz
+        }
+        return ['kontaktId' => $kontaktId];
+    }
+
+    private function fehlerLoggen(string $kennung, \Throwable $ex, array $kontext)
+    {
+        try {
+            $this->getLogger($kennung)->error(self::PLUGIN . '::Log.fehler', $kontext + [
+                'meldung' => $ex->getMessage(),
+                'code'    => $ex->getCode(),
+                'zeile'   => $ex->getLine(),
+            ]);
+        } catch (\Throwable $egal) {
+            // log da patlarsa sepeti etkileme
+        }
     }
 }

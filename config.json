@@ -13,6 +13,15 @@
                         "defaultValue": "false"
                     }
                 },
+                "testmodus": {
+                    "type": "checkBox",
+                    "required": false,
+                    "label": "Config.testmodusLabel",
+                    "options": {
+                        "tooltip": "Config.testmodusTooltip",
+                        "defaultValue": "true"
+                    }
+                },
                 "testKontaktIds": {
                     "type": "inputText",
                     "required": false,
@@ -30,36 +39,73 @@
                         "tooltip": "Config.testKundenklassenIdsTooltip",
                         "defaultValue": ""
                     }
-                },
-                "ausloeserVariationId": {
+                }
+            }
+        },
+        "Config.tabRegeln": {
+            "label": "Config.tabRegeln",
+            "formFields": {
+                "benoetigteMenge": {
                     "type": "inputText",
                     "required": false,
-                    "label": "Config.ausloeserVariationIdLabel",
+                    "label": "Config.benoetigteMengeLabel",
                     "options": {
-                        "tooltip": "Config.ausloeserVariationIdTooltip",
+                        "tooltip": "Config.benoetigteMengeTooltip",
+                        "defaultValue": "6"
+                    }
+                },
+                "aktionsArtikelIds": {
+                    "type": "inputTextArea",
+                    "required": false,
+                    "label": "Config.aktionsArtikelIdsLabel",
+                    "options": {
+                        "tooltip": "Config.aktionsArtikelIdsTooltip",
                         "defaultValue": ""
                     }
                 },
-                "geschenkVariationId": {
-                    "type": "inputText",
+                "aktionsVariationIds": {
+                    "type": "inputTextArea",
                     "required": false,
-                    "label": "Config.geschenkVariationIdLabel",
+                    "label": "Config.aktionsVariationIdsLabel",
                     "options": {
-                        "tooltip": "Config.geschenkVariationIdTooltip",
+                        "tooltip": "Config.aktionsVariationIdsTooltip",
                         "defaultValue": ""
                     }
                 },
-                "preisModus": {
-                    "type": "selectBox",
+                "geschenkElfxArtikelIds": {
+                    "type": "inputText",
                     "required": false,
-                    "label": "Config.preisModusLabel",
+                    "label": "Config.geschenkElfxArtikelIdsLabel",
                     "options": {
-                        "tooltip": "Config.preisModusTooltip",
-                        "defaultValue": "variante",
-                        "selectBoxValues": [
-                            {"value": "variante",   "caption": "Config.preisModusVariante"},
-                            {"value": "givenPrice", "caption": "Config.preisModusGivenPrice"}
-                        ]
+                        "tooltip": "Config.geschenkElfxArtikelIdsTooltip",
+                        "defaultValue": ""
+                    }
+                },
+                "geschenkElfliqErlaubt": {
+                    "type": "checkBox",
+                    "required": false,
+                    "label": "Config.geschenkElfliqErlaubtLabel",
+                    "options": {
+                        "tooltip": "Config.geschenkElfliqErlaubtTooltip",
+                        "defaultValue": "true"
+                    }
+                },
+                "gutscheinElfx": {
+                    "type": "inputText",
+                    "required": false,
+                    "label": "Config.gutscheinElfxLabel",
+                    "options": {
+                        "tooltip": "Config.gutscheinElfxTooltip",
+                        "defaultValue": ""
+                    }
+                },
+                "gutscheinElfliq": {
+                    "type": "inputText",
+                    "required": false,
+                    "label": "Config.gutscheinElfliqLabel",
+                    "options": {
+                        "tooltip": "Config.gutscheinElfliqTooltip",
+                        "defaultValue": ""
                     }
                 }
             }

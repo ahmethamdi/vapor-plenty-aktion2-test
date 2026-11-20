@@ -1,5 +1,13 @@
 # Release notes for VaporAktion2Test
 
+## v0.2.0 (2026-11-20)
+
+### Changed
+- Rebuilt as promotion "6 promotion items → 1 ELFLIQ or 1 ELFX Pod Kit free" (gift at normal price + fixed-amount promotion coupon).
+
+### Added
+- Gift box in cart and cart preview, REST route `/rest/vapor-aktion2/geschenk`, test mode, coupon cleanup, checkout validation.
+
 ## v0.1.1 (2026-11-20)
 
 ### Added

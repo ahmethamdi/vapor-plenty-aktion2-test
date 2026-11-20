@@ -1,5 +1,16 @@
 # Release Notes für VaporAktion2Test
 
+## v0.2.0 (2026-11-20)
+
+### Geändert
+- Kompletter Umbau zur Aktion „6 Aktions-Artikel → 1 ELFLIQ oder 1 ELFX Pod Kit gratis“.
+- Geschenk = echte Variation zum Normalpreis + Aktionsgutschein (Festbetrag). 0-€-Position/givenPrice entfernt (im Live-Test wirkungslos).
+
+### Hinzugefügt
+- Geschenk-Box im Warenkorb und in der Warenkorb-Vorschau (Container), REST-Route `/rest/vapor-aktion2/geschenk`.
+- Testmodus, Aktions-Artikel (Artikel-/Variations-IDs), ELFX-Artikel, Gutscheincodes.
+- Entfernt Aktions-Gutscheine ohne Berechtigung; Prüfung vor der Zahlung (ValidateCheckoutEvent).
+
 ## v0.1.1 (2026-11-20)
 
 ### Hinzugefügt

@@ -1,69 +1,137 @@
-# Kurulum ve test — VaporAktion2Test
+# Kurulum ve test — VaporAktion2Test 0.2.0 (dal `kampagne`)
 
-Amaç tek soru: eklenti sepete **0,00 € gerçek ürün satırı** koyabiliyor mu, bu satır siparişe 0,00 € olarak geçiyor mu, stok nereden düşüyor?
+Kampanya: **6 Aktions-Artikel (ELFLIQ) al → 1 ELFLIQ ya da 1 ELFX Pod Kit hediye.**
 
-> Eklenti varsayılan **pasif** ve yalnız **test müşteri sınıfında** çalışır. Yine de plugin set'i bereitstellen etmek tüm seti yeniden derler: sakin bir saatte yap.
+Nasıl çalışır (20.11.2026 canlı testiyle kanıtlanan yol):
+hediye **gerçek varyasyon, tam fiyatla** sepete girer → eklenti aynı anda hediye grubunun **Aktionsgutschein** kodunu sepete uygular (Festbetrag = hediye fiyatı, Artikel filtresi = hediye ürünü) → hediye fiilen 0 €. Hak düşerse ya da müşteri hediyeyi kaldırırsa eklenti **hediyeyi + kuponu** kaldırır.
 
-## 1. Hazırlık (Plenty arka ofisi)
+> Eklenti varsayılan **pasif** ve **test modunda**. Plugin set'ini bereitstellen etmek tüm seti yeniden derler: sakin bir saatte yap.
 
-1. **Test müşteri sınıfı:** Einrichtung » CRM » Kundenklassen → yeni sınıf (ör. „Test Aktion2“) → **ID'sini not et**.
-2. **Test müşterisi:** CRM » Kontakte → test kontağı aç (ya da mevcut test kontağı) → Kundenklasse = „Test Aktion2“. Bu kontakla webshop girişi olmalı.
-3. **Tetikleyici:** normal bir ELFLIQ varyasyonu seç → **Variations-ID**'sini not et.
-4. **Hediye varyasyonu (Test A — ayrı 0 € varyasyon):** yeni bir varyasyon (ör. „ELFLIQ Gratis – Aktion 2 TEST“):
-   - aktiv, Mandant **Lostmarygermany.de** için verfügbar
-   - Verkaufspreis **0,00 €** (Mandant/Herkunft webshop'u kapsasın)
-   - kategoriye bağlama, listelerde görünmesin
-   - Bestand: Netto-Warenbestand'a ör. 5 adet koy, **önce/sonra** sayısını not et
-   - **Variations-ID**'sini not et (tetikleyiciden farklı olmalı)
+---
 
-## 2. Eklentiyi Git ile bağlama
+## 1. Dalı değiştir (Lostmary plugin set'i)
 
-1. Plugins » Plugin-Set-Übersicht » **Lostmarygermany.de** setini aç » **Plugin hinzufügen** » **Git**.
-2. Remote-URL: `https://github.com/ahmethamdi/vapor-plenty-aktion2-test.git`
-3. Benutzername: GitHub kullanıcı adın. Passwort: **GitHub kişisel erişim token'ın** (fine-grained, yalnız bu depo, *Contents: Read-only*). Token'ı sen gir — depoya, bu dosyaya, sohbete yazma.
-4. Branch: `main` → Speichern.
-5. Sette eklentiyi seç → **Installieren** (branch `main`), sonra **Aktiv** işaretle.
-6. Eklentinin **Konfiguration** sekmesi:
-   - Aktion aktiv: **evet**
-   - Test-Kundenklassen: 1. adımdaki ID (birden çoksa `9, 12`)
-   - Auslöser-Variations-ID: tetikleyici
-   - Geschenk-Variations-ID: hediye
-   - Preis-Modus: **Variante**
-7. Seti **bereitstellen** (Plugin-Set bereitstellen). Bitince yeşil olmalı; hata varsa Daten » Log'a bak.
+`main` eski deneme sürümü (0.1.x) olarak kalır; yeni sürüm `kampagne` dalında.
 
-## 3. Test A — ayrı 0 € varyasyon
+1. Plugins » Plugin-Set-Übersicht » **Lostmarygermany.de** setini aç » **VaporAktion2Test** satırı.
+2. Git ayarlarında **Branch: `kampagne`** → Speichern.
+3. Eklentiyi bu dalla güncelle (Plugin Build 2 dalın son hâlini çeker).
+4. **Henüz bereitstellen etme**: önce 2. ve 3. adım (kuponlar + ayarlar).
 
-1. Webshop'a **test müşterisiyle giriş yap** (misafir ya da başka sınıf: eklenti hiçbir şey yapmaz).
-2. Tetikleyiciyi sepete ekle → sepette ikinci satır olarak **hediye, 0,00 €** görünmeli.
-3. Hediye adedini 3 yap → sayfayı yenile → 1'e dönmeli.
-4. Tetikleyiciyi sil → hediye de silinmeli. Tekrar ekle.
-5. Daten » Log → Integration **VaporAktion2Test** → „Geschenk-Variation wurde … hinzugefügt“ ve „… Preis 0,00 €“ satırı. Ek bilgide `price`, `itemType`, `priceId` yazar. **„ACHTUNG … größer als 0,00 €“** görürsen fiyat 0 değil: kaydet, dur.
-6. Siparişi ver (ör. Vorkasse).
-7. Aufträge » Auftrag öffnen → **Positionen**: hediye satırı 0,00 € mi, tipi ne (Variante)? Toplam doğru mu?
-8. Stok: hediye varyasyonunun **reserviert** / Netto-Warenbestand'ı değişti mi? (Fiziksel düşüş Warenausgang'da olur.)
-9. Test siparişini **iptal et/sil**.
+## 2. Kuponları panelde aç (API ile açılamıyor, elle)
 
-## 4. Test B — hediye = Artikelpaket (isteğe bağlı)
+Her hediye grubu için **bir** kampanya. Yol: **Aufträge » Gutscheine** (Gutscheinkampagnen) » **Neue Kampagne**.
 
-Amaç: stok gerçek ELFLIQ'ten düşsün.
-1. Paket varyasyon oluştur: Paket-Typ **Artikelpaket**, içinde **1× gerçek ELFLIQ varyasyonu**, paket Verkaufspreis **0,00 €**.
-2. Konfigürasyonda Geschenk-Variations-ID = paket varyasyonu → bereitstellen.
-3. Test A'nın 2–8 adımlarını tekrarla. Sepette paket satırı mı yoksa bileşen satırı mı göründüğünü, siparişte paket + Paketbestandteil satırlarının fiyatlarını ve **hangi varyasyonun stoğunun** (paket mi, bileşen mi) değiştiğini not et.
-4. Not: Ceres'in kendi „sepete ekle“si, webshop ayarında paketler bölünüyorsa paketi bileşenlerine ayırıp **bileşenin normal fiyatıyla** ekler. Eklenti çekirdek depoyu doğrudan çağırdığı için bu bölmeden geçmez; ama sonuç yine testle görülmeli.
+| Alan | ELFX kampanyası | ELFLIQ kampanyası |
+|---|---|---|
+| Name | Aktion 2 – ELFX gratis | Aktion 2 – ELFLIQ gratis |
+| Typ | **Aktionsgutschein** | **Aktionsgutschein** |
+| Rabatt | **Festbetrag 16,99 €** (ELFX satış fiyatı) | **Festbetrag 8,49 €** (1 ELFLIQ satış fiyatı) |
+| Code-Länge | **16 Zeichen** | **16 Zeichen** |
+| Code-Anzahl / Einlösung | **tek kod, sınırsız / çok kez kullanılabilir** (müşteri başına sınırsız) | aynı |
+| Mindestbestellwert | 0 | 0 |
+| Gültigkeit | kampanya süresi | kampanya süresi |
+| **Mandant (Filter)** | **yalnız Lostmarygermany.de** | **yalnız Lostmarygermany.de** |
+| **Artikel (Filter)** | **ELFX artikeli** (Lostmary: item **14359**) | **Aktions-ELFLIQ artikelleri** (Lostmary: **24534** + diğer tat artikelleri) |
+| Versandkosten | etkilenmesin | etkilenmesin |
 
-## 5. Test C — givenPrice deneyi (isteğe bağlı)
+Kampanyayı kaydet → **Code**'u kopyala (16 karakter) → 3. adımdaki ayara yapıştır.
 
-1. Preis-Modus = **givenPrice**, Geschenk-Variations-ID = **fiyatı olan** normal bir varyasyon (tetikleyiciden farklı) → bereitstellen.
-2. Tetikleyiciyi sepete ekle → log'da `price` 0 mı? Sepette 0,00 € mi?
-3. 0 ise sipariş ver ve sipariş satırına bak. 0 değilse: çekirdek `givenPrice`'ı webshop sepetinde dikkate almıyor demektir. Ayrı varyasyon (A) ya da paket (B) kullanılır.
+Hazır test kodu (ELFX): **`3NQNNFWCT3D99KK2`** — item 14359, 16,99 €, yalnız Lostmary, 22.11.2026'ya kadar geçerli. Bu kod ELFX ayarı için hemen kullanılabilir; ELFLIQ için yeni kampanya aç.
 
-## 6. Geri alma
+Notlar:
+- Plenty sepetinde aynı anda **tek kupon** olur. Müşterinin başka kuponu varsa hediye seçilemez (kutuda „Aktion nicht mit anderen Gutscheinen kombinierbar“).
+- Kodlar gizli tutulmalı ama sızsa da sorun değil: eklenti, hakkı olmayan sepette bizim kodu **siler** (test modunda test dışı tüm müşteriler, eklenti kapalıyken herkes).
+- Festbetrag sabittir: hediye fiyatı değişirse (ör. Black Deals) kampanya tutarını da değiştir. ELFLIQ satırı Lostmary'de **8,4901 €** ile giriyor, kupon 8,49 → hediye satırında **0,0001 €** fark kalır (gösterimde 0,00 €; sipariş toplamında yuvarlamaya bağlı, bkz. Test 5).
 
-1. Konfigürasyonda **Aktion aktiv = hayır** ya da sette eklentinin **Aktiv** işaretini kaldır.
-2. **Plugin-Set bereitstellen**.
-3. Test siparişlerini iptal et, test müşterisinin sınıfını geri al, hediye/paket varyasyonunu pasif yap.
-4. İstersen eklentiyi setten sil ve GitHub token'ını iptal et (GitHub › Settings › Developer settings › Tokens).
+## 3. Eklenti ayarları (Lostmary test değerleri)
 
-## Sonucu bildirirken
+Plugin-Set » VaporAktion2Test » **Konfiguration**.
 
-Şunları yaz: Test A/B/C için sepet fiyatı, sipariş satırı fiyatı ve tipi, stoğu değişen varyasyon, log satırları (ekran görüntüsü yeter).
+**Allgemein**
+
+| Ayar | Değer |
+|---|---|
+| Aktion aktiv | **evet** |
+| Testmodus | **evet** |
+| Test-Kunden (Kontakt-IDs) | **591963** |
+| Test-Kundenklassen | boş (sınıf değiştirmek Lostmary'de ürünleri gizledi) |
+
+**Aktion & Gutscheine**
+
+| Ayar | Değer |
+|---|---|
+| Benötigte Menge | **6** |
+| Aktions-Artikel (Artikel-IDs) | **24534** (Dragon Fruit Blueberry) — canlıda: kategori **ELFBAR ELFLIQ Liquids**'teki **tüm tat artikelleri** virgülle |
+| Aktions-Artikel (Variations-IDs) | boş (tek tek varyasyon gerekiyorsa buraya) |
+| Geschenk ELFX (Artikel-IDs) | **14359** |
+| ELFLIQ als Geschenk | **evet** |
+| Gutscheincode ELFX | **3NQNNFWCT3D99KK2** (ya da yeni kampanyanın kodu) |
+| Gutscheincode ELFLIQ | ELFLIQ kampanyasının kodu |
+
+Lostmary'de ölçülen: ELFLIQ **87138** (ELF-DFBLB-10, 10 mg) sepete 8,4901 € ile giriyor; **87139** (20 mg) bağlı ama stok negatif → seçim listesinde görünmez (satılabilir değil), ama müşteri sepetine koyabildiyse sayıma girer. ELFX **7880** (silver blue) aktif + stoklu.
+
+Yedek: ELFLIQ'ler bir sebeple satılamazsa test için ELFA Master varyasyonları **8496–8499** „Aktions-Artikel (Variations-IDs)“ alanına yazılabilir (ELFLIQ kuponu filtresini o artikele çevir).
+
+Kodları boş bırakılan grup kutuda görünmez (ör. yalnız ELFX test etmek için ELFLIQ kodunu boş bırak).
+
+## 4. Container bağlantıları
+
+Plugin-Set » VaporAktion2Test » **Container-Verknüpfungen** (eklenti varsayılanları getirir; kontrol et):
+
+| Data Provider | Container |
+|---|---|
+| Aktion 2: Script (Pflicht) | `Ceres::Script.AfterScriptsLoaded` (Script: Nach dem Laden der Scripte) |
+| Aktion 2: Geschenk-Box Warenkorb | `Ceres::Basket.BeforeBasketTotals` (Warenkorb: Vor den Warenkorb-Summen) |
+| Aktion 2: Geschenk-Box Warenkorb-Vorschau | `Ceres::BasketPreview.BeforeBasketTotals` |
+
+Script bağlantısı yoksa kutu boş kalır. ShopBuilder sepet sayfasında kutu „Warenkorb-Summen“ widget'ının üstünde çıkar.
+
+Sonra seti **bereitstellen**. Bitince yeşil olmalı; hata varsa Daten » Log.
+
+## 5. Test adımları (test kontağı 591963 ile giriş yap)
+
+Mobil: tarayıcıda 360 px genişlikte de bak.
+
+| # | Adım | Beklenen |
+|---|---|---|
+| 1 | Çıkış yapmış (misafir) sepete 87138 × 6 koy | Kutu **yok** (test modu) |
+| 2 | 591963 ile giriş, sepette 87138 × 4 | Kutu: „Noch 2 Liquids bis zum Gratis-Geschenk“, ilerleme çubuğu |
+| 3 | Adedi 6 yap | Kutu: „Glückwunsch! …“, ELFX / ELFLIQ seçimi, renk listesi |
+| 4 | ELFX → Silver Blue (7880) → „Gratis hinzufügen“ | Sepette ELFX satırı **16,99 €** + kupon satırı **−16,99 €**; kutu „Dein Geschenk: … GRATIS“. Toplam = 6 × 8,49 (+ kargo) |
+| 5 | ELFX adedini 3 yap | Sayfa güncellenince adet **1** |
+| 6 | „Ändern“ → 1 ELFLIQ → 87138 → ekle | ELFX satırı + ELFX kuponu gider; 87138 satırı **7** adet, ELFLIQ kuponu **−8,49 €**. Toplam ≈ 6 × 8,49 (0,0001 € kuruş farkını not et) |
+| 7 | 87138'i 6'ya düşür | Hediye düşer: satır 5 adet, kupon gider, kutu „Noch 1 Liquid …“ |
+| 8 | Tekrar 6 + ELFX seç, sonra kupon alanına **başka bir kupon** gir | Hediye satırı **kaldırılır**, yabancı kupon kalır; kutu „Aktion nicht mit anderen Gutscheinen kombinierbar“ |
+| 9 | Yabancı kuponu sil → ELFX seç | Çalışır |
+| 10 | Hediye varken kuponu elle sil | Sonraki sepet değişiminde / sayfa yenilemede kupon geri gelir (ya da kasada tekrar uygulanır) |
+| 11 | Sızıntı: başka hesapla (ya da misafir) ELFX'i sepete koy, ELFX kodunu kupon alanına gir | Kupon **silinir** (bir sonraki sepet değişiminde, en geç kasada „Dein Warenkorb wurde angepasst …“) |
+| 12 | 4. adım durumunda sipariş ver (Vorkasse) | Siparişte ELFX satırı 16,99 €, kupon −16,99 €; stok **7880**'den düşer |
+| 13 | Daten » Log » Integration **VaporAktion2Test** | „Kunde hat ein Geschenk gewählt“, „Zu wenige Aktions-Artikel …“, „Aktions-Gutschein ohne Geschenk … entfernt“ satırları |
+
+Test siparişlerini sonra iptal et.
+
+Bilinen sınırlar:
+- Müşteri aynı ELFX rengini **ücretli** olarak da sepete koymuşsa o renk hediye seçilemez („Dieses Gerät liegt bereits im Warenkorb“). Hediye ELFX'in adedi her zaman 1'e çekilir.
+- ELFLIQ hediyesi aynı varyasyonun ücretli satırıyla birleşir (Plenty aynı varyasyonu tek satırda tutar): 7 adet = 6 ücretli + 1 hediye, indirim kupon satırında görünür.
+- Hediye seçimi oturumda tutulur. Oturum biterse sepet de biter; ama oturum kaybolup sepet kalırsa kupon silinir ve hediye satırı tam fiyatla kalır (müşteri kutudan yeniden seçebilir).
+
+## 6. Canlıya alma (hepsi için)
+
+1. Kampanyaların Artikel filtresine **tüm** Aktions-ELFLIQ tat artikellerini ekle.
+2. Ayarlar: Aktions-Artikel listesini tamamla, **Testmodus = hayır** → bereitstellen.
+3. İlk siparişleri ve Log'u kontrol et.
+
+## 7. Geri alma / acil durum
+
+1. Konfigürasyonda **Aktion aktiv = hayır** → bereitstellen. Kutu kaybolur; sepetlerde kalan bizim kupon bir sonraki sepet değişiminde silinir, kayıtlı hediye satırı da kaldırılır.
+2. Kesin kapatma: panelde iki **kupon kampanyasını pasif yap** (en hızlı yol; bereitstellen gerekmez).
+3. Gerekirse sette eklentinin **Aktiv** işaretini kaldır → bereitstellen.
+
+## Teknik (geliştirici)
+
+- `src/Helpers/Regel.php`: saf kural (sayım, hak, kaldır/kupon kararları); `tests/run.php` bunu ve servisi sahte Plenty sınıflarıyla test eder (`php tests/run.php`).
+- `src/Services/GeschenkService.php`: kuralı Plenty'de yürütür. `AfterBasketChanged` (sepet), `ValidateCheckoutEvent` (kasa), REST durum sorgusu.
+- Sepet/kupon: `BasketItemRepositoryContract` (all/update/remove), `BasketRepositoryContract::setCouponCode/removeCouponCode` (IO `CouponService` aynılarını çağırır), ekleme `IO\Services\BasketService::addBasketItem` (IO REST ile aynı yol).
+- REST: `GET/POST/DELETE /rest/vapor-aktion2/geschenk` (POST/DELETE `csrf` middleware'li; plentyShop `X-CSRF-TOKEN` gönderir). Yanıt `IO\Api\ApiResponse`: sepet olayları dönünce plentyShop Vuex sepeti kendisi günceller.
+- Seçenekler: `Plenty\Modules\Webshop\ItemSearch` — `isActive`, `isVisibleForClient`, `isSalable`, `hasPriceForCustomer`.

@@ -3,25 +3,31 @@
 namespace VaporAktion2Test\Providers;
 
 use Plenty\Modules\Basket\Events\Basket\AfterBasketChanged;
+use Plenty\Modules\Frontend\Events\ValidateCheckoutEvent;
 use Plenty\Plugin\Events\Dispatcher;
 use Plenty\Plugin\ServiceProvider;
+use VaporAktion2Test\Listeners\KasseListener;
 use VaporAktion2Test\Listeners\WarenkorbGeaendertListener;
 use VaporAktion2Test\Services\GeschenkService;
+use VaporAktion2Test\Services\KatalogService;
 
 /**
- * Eklentinin giriş noktası.
- * Tek iş: sepet değiştiğinde (AfterBasketChanged) hediye kuralını çalıştırmak.
+ * Eklentinin giriş noktası: servisler, REST rotaları, sepet ve kasa olay dinleyicileri.
+ * Sepet kutusu ve script, plugin.json'daki dataProviders ile plentyShop LTS container'larına bağlanır.
  */
 class VaporAktion2TestServiceProvider extends ServiceProvider
 {
     public function register()
     {
-        // Tek örnek: özyineleme kilidi ($laeuft) istek boyunca aynı nesnede durmalı.
+        // Tek örnek: döngü kilidi ($laeuft) ve arama önbelleği istek boyunca aynı nesnede durmalı.
+        $this->getApplication()->singleton(KatalogService::class);
         $this->getApplication()->singleton(GeschenkService::class);
+        $this->getApplication()->register(VaporAktion2TestRouteServiceProvider::class);
     }
 
     public function boot(Dispatcher $dispatcher)
     {
         $dispatcher->listen(AfterBasketChanged::class, WarenkorbGeaendertListener::class);
+        $dispatcher->listen(ValidateCheckoutEvent::class, KasseListener::class);
     }
 }
