@@ -1,0 +1,44 @@
+.va1-box{margin:0 0 1rem}
+.va1-box:empty{margin:0}
+.va1{border:1px solid #d6d6d6;border-radius:4px;padding:12px 14px;background:#fff;color:inherit;font-size:.875rem;line-height:1.4;box-shadow:none}
+.va1,.va1 *,.va1 *::before,.va1 *::after{box-sizing:border-box}
+.va1-sendet{opacity:.7;pointer-events:none}
+.va1-kopf{display:flex;align-items:flex-start;gap:8px;margin:0 0 8px}
+.va1-icon{flex:0 0 auto;margin-top:1px;color:currentColor}
+.va1-titel{font-size:.95rem;line-height:1.3;font-weight:700}
+.va1-text{display:block;margin:0 0 8px}
+.va1-stark{font-weight:600}
+.va1-klein{margin:6px 0 0;font-size:.75rem;opacity:.7}
+.va1-warnung{padding:8px 10px;border-left:3px solid #c0392b;background:#fdf1f0}
+.va1-fortschritt{display:flex;align-items:center;gap:8px;margin:0 0 6px}
+.va1-balken{flex:1 1 auto;height:8px;border-radius:4px;background:#ececec;overflow:hidden}
+.va1-balken span{display:block;height:100%;background:currentColor;transition:width .3s}
+.va1-zahl{flex:0 0 auto;font-size:.8rem;white-space:nowrap}
+.va1-fertig{display:flex;align-items:flex-start;gap:8px;margin:0 0 8px}
+.va1-haken{flex:0 0 auto;width:18px;height:18px;margin-top:1px;border-radius:50%;background:#1e7e34;position:relative}
+.va1-haken::after{content:"";position:absolute;left:6px;top:3px;width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.va1-name{font-weight:600;word-break:break-word}
+.va1-statt{opacity:.6;font-size:.8rem}
+.va1-gratis{display:inline-block;padding:1px 6px;border-radius:3px;background:#1e7e34;color:#fff;font-size:.7rem;font-weight:700;text-transform:uppercase;vertical-align:middle}
+.va1-raster{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0 0 10px}
+.va1-kachel{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;min-height:64px;margin:0;padding:8px 4px;border:1px solid #d6d6d6;border-radius:4px;background:#fff;text-align:center;cursor:pointer}
+.va1-kachel input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.va1-kachel:hover{border-color:#999}
+.va1-kachel.va1-an{border:2px solid currentColor;padding:7px 3px}
+.va1-kachel:focus-within{outline:2px solid currentColor;outline-offset:1px}
+.va1-bild{display:block;width:44px;height:44px;object-fit:contain}
+.va1-farbe{font-size:.8rem;font-weight:600;line-height:1.2;word-break:break-word}
+.va1-preis{font-size:.72rem;line-height:1.2}
+.va1-preis s{opacity:.6}
+.va1-preis b{color:#1e7e34}
+.va1-knoepfe{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-top:4px}
+.va1-knopf{white-space:normal}
+.va1-zeile{display:flex;gap:6px;align-items:stretch;margin:0 0 6px}
+.va1-select{flex:1 1 auto;min-width:0;font-size:.875rem}
+.va1-meldung{margin:8px 0 0;padding:6px 8px;border-radius:3px;font-size:.85rem}
+.va1-ok{background:#eaf6ec;color:#1e5e2b}
+.va1-fehler{background:#fdf1f0;color:#8a2a1f}
+.va1-kompakt{padding:10px}
+.va1-kompakt .va1-titel{font-size:.875rem}
+@media (max-width:575px){.va1{padding:10px}.va1-haupt{width:100%}}
+@media (max-width:340px){.va1-raster{grid-template-columns:repeat(2,minmax(0,1fr))}}

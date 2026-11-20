@@ -1,5 +1,16 @@
 # Release Notes für VaporAktion2Test
 
+## v0.3.0 (2026-11-20)
+
+### Hinzugefügt
+- **Aktion 1: „Kaufe 3 ELFA Pods und erhalte 1 ELFA Basisgerät gratis“** – unabhängig von Aktion 2: eigener Konfigurations-Reiter (`a1…`), REST-Route `/rest/vapor-aktion1/geschenk`, eigene Boxen (Warenkorb, Warenkorb-Vorschau, optional Artikelseite), `aktion1.js` / `aktion1.css` (Präfix `va1-`).
+- Gerät als echte Position (Einzelfarbe, 7,49 €) + eigener Aktionsgutschein (Festbetrag). Zählt Einzelsorten (Positionstyp 10) und nicht aufgeteilte Pakete der Sammelartikel (Typ 11, elfbargermany).
+- Nicht kombinierbar mit Gutscheinen und mit Aktion 2 (nur ein Gutschein pro Warenkorb): Box zeigt „Nicht mit anderer Aktion kombinierbar“.
+- Standard: Aktion 1 **aus**, Testmodus an, Gutscheincode leer → keine Verhaltensänderung nach Bereitstellung.
+
+### Unverändert
+- Aktion 2 (Logik, Route, Box, Einstellungen).
+
 ## v0.2.5 (2026-11-20)
 
 - Fehlt das CSRF-Token auf der Seite, wird die Seite neu geladen statt eine Anfrage ohne Token zu senden (500 + Abmeldung).

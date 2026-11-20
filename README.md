@@ -8,4 +8,6 @@ Hediye gerçek varyasyon olarak tam fiyatla sepete girer; panelde açılan **Akt
 - Eklenti belgesi (Almanca): [meta/documents/user_guide_de.md](meta/documents/user_guide_de.md)
 - Yerel testler: `php tests/run.php` (Plenty gerektirmez; sahte sınıflar `tests/stubs.php`)
 
-Dal düzeni: `main` = eski deneme (0.1.x), `kampagne` = bu sürüm. Plenty "Plugin Build 2" kurulu dalın son hâlini çeker.
+Dal: yalnız `main` (Plenty her Bereitstellen'de main'in son hâlini çeker). main'e yalnız denenmiş kod.
+
+**0.3.0'dan itibaren ikinci kampanya: Aktion 1 — 3 ELFA Pods al → 1 ELFA Basisgerät hediye** (`src/Aktion1/`, varsayılan kapalı). Kurulum: [KURULUM.md](KURULUM.md#aktion-1) · testler: `php tests/run_aktion1.php`.
