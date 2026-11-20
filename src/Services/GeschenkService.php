@@ -61,9 +61,10 @@ class GeschenkService
             return;
         }
 
-        $klassen = $this->testKundenklassen();
-        if (count($klassen) === 0) {
-            // Boş liste = hiç çalışma (güvenlik varsayılanı)
+        $klassen  = $this->idListe('VaporAktion2Test.testKundenklassenIds');
+        $kontakte = $this->idListe('VaporAktion2Test.testKontaktIds');
+        if (count($klassen) === 0 && count($kontakte) === 0) {
+            // İki liste de boş = hiç çalışma (güvenlik varsayılanı)
             return;
         }
 
@@ -72,8 +73,10 @@ class GeschenkService
             return; // misafir: hiçbir zaman
         }
 
+        // Test müşteri numarası ya da test müşteri sınıfı (sınıf değiştirmek ürün görünürlüğünü bozabildiği için
+        // müşteri numarası tercih edilir — 20.11.2026 Lostmary'de sınıf 61 ürünleri gizledi)
         $klasseId = (int)$this->contactRepository->getContactClassId();
-        if (!in_array($klasseId, $klassen, true)) {
+        if (!in_array($kontaktId, $kontakte, true) && !in_array($klasseId, $klassen, true)) {
             return;
         }
 
@@ -259,9 +262,9 @@ class GeschenkService
     /**
      * "3, 7,12" → [3, 7, 12]; geçersiz parçalar atılır.
      */
-    private function testKundenklassen(): array
+    private function idListe(string $schluessel): array
     {
-        $roh = (string)$this->config->get('VaporAktion2Test.testKundenklassenIds');
+        $roh = (string)$this->config->get($schluessel);
         $ids = [];
         foreach (explode(',', $roh) as $teil) {
             $teil = trim($teil);

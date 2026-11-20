@@ -1,5 +1,10 @@
 # Release Notes für VaporAktion2Test
 
+## v0.1.1 (2026-11-20)
+
+### Hinzugefügt
+- Test-Kunden per Kontakt-ID (`testKontaktIds`), zusätzlich zu Test-Kundenklassen. Eine eigene Kundenklasse kann Artikel im Shop ausblenden.
+
 ## v0.1.0 (2026-11-19)
 
 ### Hinzugefügt

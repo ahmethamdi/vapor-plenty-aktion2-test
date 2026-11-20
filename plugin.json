@@ -2,7 +2,7 @@
     "name"              : "VaporAktion2Test",
     "namespace"         : "VaporAktion2Test",
     "type"              : "integration",
-    "version"           : "0.1.0",
+    "version"           : "0.1.1",
     "description"       : "Testplugin: legt bei einem Auslöser-Artikel eine Geschenk-Variation mit 0,00 € als echte Warenkorbposition an (nur für Test-Kundenklassen).",
     "shortDescription"  : {"de": "Test: Gratis-Variation (0,00 €) als echte Warenkorbposition", "en": "Test: free variation (0.00 €) as a real basket item"},
     "author"            : "34Devs",

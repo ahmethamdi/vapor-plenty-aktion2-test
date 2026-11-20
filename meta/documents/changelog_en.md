@@ -1,5 +1,10 @@
 # Release notes for VaporAktion2Test
 
+## v0.1.1 (2026-11-20)
+
+### Added
+- Test customers by contact ID (`testKontaktIds`), in addition to test customer classes. A separate customer class can hide items in the shop.
+
 ## v0.1.0 (2026-11-19)
 
 ### Added

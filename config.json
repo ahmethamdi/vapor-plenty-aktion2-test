@@ -13,6 +13,15 @@
                         "defaultValue": "false"
                     }
                 },
+                "testKontaktIds": {
+                    "type": "inputText",
+                    "required": false,
+                    "label": "Config.testKontaktIdsLabel",
+                    "options": {
+                        "tooltip": "Config.testKontaktIdsTooltip",
+                        "defaultValue": ""
+                    }
+                },
                 "testKundenklassenIds": {
                     "type": "inputText",
                     "required": false,
