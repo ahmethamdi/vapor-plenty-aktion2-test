@@ -44,28 +44,9 @@
     }
 
     function anfrage(methode, daten, fertig) {
-        var kopf = { "X-CSRF-TOKEN": csrf(), "Accept-Language": (window.App && window.App.language) || "de" };
-        var jq = window.jQuery;
-
-        if (jq && jq.ajax) {
-            jq.ajax({
-                url: URL,
-                method: methode,
-                data: daten || {},
-                dataType: "json",
-                cache: false,
-                headers: kopf
-            }).done(function (antwort) {
-                fertig(null, antwort && antwort.data ? antwort.data : null);
-            }).fail(function (xhr) {
-                var antwort = null;
-                try { antwort = JSON.parse(xhr.responseText); } catch (e) { antwort = null; }
-                fertig(true, antwort && antwort.data ? antwort.data : null);
-            });
-            return;
-        }
-
-        // Fallback ohne jQuery: Warenkorb danach über Vuex neu laden
+        var kopf = { "X-CSRF-TOKEN": csrf(), "X-Requested-With": "XMLHttpRequest", "Accept": "application/json", "Accept-Language": (window.App && window.App.language) || "de" };
+        // 20.11.: NICHT über jQuery – plentyShop setzt X-CSRF-TOKEN per ajaxSetup selbst, unser Header kam doppelt
+        // ("t, t") → Token-Fehler → 500 + "aus Sicherheitsgründen abgemeldet". fetch sendet den Header genau einmal.
         var opts = { method: methode, credentials: "same-origin", headers: kopf };
         var url = URL;
         if (methode === "GET") {
@@ -76,10 +57,14 @@
                 return encodeURIComponent(k) + "=" + encodeURIComponent(daten[k]);
             }).join("&");
         }
-        window.fetch(url, opts).then(function (r) { return r.json(); }).then(function (antwort) {
+        window.fetch(url, opts).then(function (r) {
+            if (!r.ok) { throw new Error("HTTP " + r.status); }
+            return r.json();
+        }).then(function (antwort) {
             fertig(null, antwort && antwort.data ? antwort.data : null);
-            if (methode !== "GET") {
-                try { window.vueApp.$store.dispatch("refreshBasket"); } catch (e) { /* egal */ }
+            if (methode !== "GET" && antwort && antwort.data && antwort.data.ok) {
+                // Warenkorb (Positionen, Gutschein, Summen) sicher aktualisieren
+                window.setTimeout(function () { window.location.reload(); }, 600);
             }
         })["catch"](function () { fertig(true, null); });
     }

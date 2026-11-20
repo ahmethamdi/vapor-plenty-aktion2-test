@@ -1,5 +1,10 @@
 # Release Notes für VaporAktion2Test
 
+## v0.2.3 (2026-11-20)
+
+### Behoben
+- „Gratis hinzufügen“ ergab 500 / Abmeldung: CSRF-Header wurde über jQuery doppelt gesendet. Anfrage jetzt per fetch; nach Auswahl wird die Seite neu geladen.
+
 ## v0.2.2 (2026-11-20)
 
 ### Behoben

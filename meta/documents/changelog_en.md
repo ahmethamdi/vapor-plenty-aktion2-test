@@ -1,5 +1,10 @@
 # Release notes for VaporAktion2Test
 
+## v0.2.3 (2026-11-20)
+
+### Fixed
+- "Add gift" returned 500 / logout: CSRF header was sent twice via jQuery. Request now uses fetch; page reloads after selection.
+
 ## v0.2.2 (2026-11-20)
 
 ### Fixed
