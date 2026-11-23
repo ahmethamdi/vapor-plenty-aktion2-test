@@ -2,7 +2,7 @@
     "name": "VaporAktion2Test",
     "namespace": "VaporAktion2Test",
     "type": "integration",
-    "version": "0.2.5",
+    "version": "0.4.1",
     "description": "Aktion: Kaufe 6 Aktions-Artikel (ELFLIQ) und erhalte 1 ELFLIQ oder 1 ELFX Pod Kit gratis. Geschenk als echte Position zum Normalpreis + Aktionsgutschein (Festbetrag). Auswahl-Box im Warenkorb von plentyShop LTS.",
     "shortDescription": {
         "de": "Aktion: 6 ELFLIQ kaufen – 1 Geschenk gratis (Box im Warenkorb + Aktionsgutschein)",

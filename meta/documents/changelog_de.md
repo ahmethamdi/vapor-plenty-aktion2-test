@@ -1,5 +1,8 @@
 # Release Notes für VaporAktion2Test
 
+## 0.4.1
+- Gleicher Code wie 0.2.5 (nur Aktion 2). Versionsnummer erhöht, damit Plenty nach 0.4.0 wieder baut.
+
 ## v0.2.5 (2026-11-20)
 
 - Fehlt das CSRF-Token auf der Seite, wird die Seite neu geladen statt eine Anfrage ohne Token zu senden (500 + Abmeldung).
