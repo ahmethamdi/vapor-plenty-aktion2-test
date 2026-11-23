@@ -1,6 +1,6 @@
 # Kurulum ve test — VaporAktion2Test 0.4.0 (dal `main`)
 
-> 0.3.0: eklentide iki kampanya var. **Aktion 2** (6 ELFLIQ → hediye) aşağıda; **Aktion 1** (3 ELFA Pods → ELFA Basisgerät) en altta [Aktion 1](#aktion-1) bölümünde.
+> 0.4.0: yalnız **Aktion 2**. Aktion 1 ayrı eklenti (VaporAktion1, repo aktion-1-elfbargermany).
 > Dal: artık hep `main` (aşağıdaki 1. adımdaki `kampagne` notu eski; dal değiştirme gerekmez).
 
 # Aktion 2
