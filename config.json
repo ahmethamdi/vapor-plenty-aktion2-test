@@ -107,6 +107,24 @@
                         "tooltip": "Config.gutscheinElfliqTooltip",
                         "defaultValue": ""
                     }
+                },
+                "geschenkTurboArtikelIds": {
+                    "type": "inputText",
+                    "required": false,
+                    "label": "Config.geschenkTurboArtikelIdsLabel",
+                    "options": {
+                        "tooltip": "Config.geschenkTurboArtikelIdsTooltip",
+                        "defaultValue": "13604, 15833"
+                    }
+                },
+                "gutscheinTurbo": {
+                    "type": "inputText",
+                    "required": false,
+                    "label": "Config.gutscheinTurboLabel",
+                    "options": {
+                        "tooltip": "Config.gutscheinTurboTooltip",
+                        "defaultValue": ""
+                    }
                 }
             }
         }

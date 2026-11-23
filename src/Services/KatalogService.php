@@ -22,7 +22,7 @@ class KatalogService
     private $cache = null;
 
     /**
-     * @return array ['elfx' => Option[], 'elfliq' => Option[]]
+     * @return array ['elfx' => Option[], 'elfliq' => Option[], 'turbo' => Option[]]
      *               Option = ['variationId', 'itemId', 'gruppe', 'name', 'preis']
      */
     public function optionen(Einstellungen $e): array
@@ -31,12 +31,16 @@ class KatalogService
             return $this->cache;
         }
 
-        $ergebnis = [Einstellungen::GRUPPE_ELFX => [], Einstellungen::GRUPPE_ELFLIQ => []];
+        $ergebnis = [Einstellungen::GRUPPE_ELFX => [], Einstellungen::GRUPPE_ELFLIQ => [], Einstellungen::GRUPPE_TURBO => []];
 
         try {
             $suchen = [];
             if ($e->elfxMoeglich()) {
                 $suchen['elfx'] = $this->fabrik()->hasItemIds($e->geschenkElfxArtikelIds);
+            }
+            if ($e->turboMoeglich()) {
+                // isSalable: stockLimitation=1 olan Turbo varyasyonları stok 0 iken gelmez (stoksuz renk listede görünmez)
+                $suchen['turbo'] = $this->fabrik()->hasItemIds($e->geschenkTurboArtikelIds);
             }
             if ($e->elfliqMoeglich()) {
                 if (count($e->aktionsArtikelIds) > 0) {
@@ -57,7 +61,7 @@ class KatalogService
             $antworten = $suche->getResults($suchen);
 
             foreach ($antworten as $schluessel => $antwort) {
-                $gruppe = $schluessel === 'elfx' ? Einstellungen::GRUPPE_ELFX : Einstellungen::GRUPPE_ELFLIQ;
+                $gruppe = self::gruppeFuerSuche((string)$schluessel);
                 foreach ($this->dokumente($antwort) as $daten) {
                     $option = $this->option($daten, $gruppe);
                     if ($option !== null) {
@@ -104,6 +108,18 @@ class KatalogService
     {
         $option = $this->optionFinden($e, $variationId);
         return $option !== null ? $option['name'] : '';
+    }
+
+    /** Arama anahtarı → hediye grubu ('elfliqArtikel' / 'elfliqVariationen' → elfliq). */
+    public static function gruppeFuerSuche(string $schluessel): string
+    {
+        if ($schluessel === 'elfx') {
+            return Einstellungen::GRUPPE_ELFX;
+        }
+        if ($schluessel === 'turbo') {
+            return Einstellungen::GRUPPE_TURBO;
+        }
+        return Einstellungen::GRUPPE_ELFLIQ;
     }
 
     private function fabrik()

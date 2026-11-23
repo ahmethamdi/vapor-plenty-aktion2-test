@@ -387,7 +387,7 @@ class GeschenkService
         }
     }
 
-    /** Hediyeyi sepetten çıkar (ELFLIQ: 1 adet azalt; ELFX: satırı sil). */
+    /** Hediyeyi sepetten çıkar (ELFLIQ: 1 adet azalt; ELFX / Turbo: satırı sil). */
     private function geschenkAusWarenkorb(array $geschenk, array $zeilen)
     {
         $zeile = Regel::zeileFinden($zeilen, (int)$geschenk['variationId']);
@@ -420,7 +420,7 @@ class GeschenkService
     private function statusBauen(string $meldung): array
     {
         $e = $this->einstellungen();
-        if (!$e->aktiv || !$this->darfTeilnehmen($e) || (!$e->elfxMoeglich() && !$e->elfliqMoeglich())) {
+        if (!$e->aktiv || !$this->darfTeilnehmen($e) || !$e->irgendeinGeschenkMoeglich()) {
             return ['sichtbar' => false];
         }
 
@@ -429,7 +429,7 @@ class GeschenkService
         $geschenk  = $this->geschenkLesen();
         $bewertung = Regel::bewerten($e, true, $this->zeilen(), $geschenk, $coupon);
 
-        $optionen = [Einstellungen::GRUPPE_ELFX => [], Einstellungen::GRUPPE_ELFLIQ => []];
+        $optionen = [Einstellungen::GRUPPE_ELFX => [], Einstellungen::GRUPPE_ELFLIQ => [], Einstellungen::GRUPPE_TURBO => []];
         if ($bewertung['berechtigt'] && !$bewertung['fremderGutschein']) {
             $optionen = $this->katalog->optionen($e);
         }
@@ -486,6 +486,7 @@ class GeschenkService
             'berechtigt'         => $this->text('berechtigt'),
             'gruppeElfx'         => $this->text('gruppeElfx'),
             'gruppeElfliq'       => $this->text('gruppeElfliq'),
+            'gruppeTurbo'        => $this->text('gruppeTurbo'),
             'auswahlPlatzhalter' => $this->text('auswahlPlatzhalter'),
             'hinzufuegen'        => $this->text('hinzufuegen'),
             'deinGeschenk'       => $this->text('deinGeschenk'),
@@ -524,7 +525,7 @@ class GeschenkService
             foreach ([
                 'aktiv', 'testmodus', 'testKontaktIds', 'testKundenklassenIds', 'benoetigteMenge',
                 'aktionsArtikelIds', 'aktionsVariationIds', 'geschenkElfxArtikelIds', 'geschenkElfliqErlaubt',
-                'gutscheinElfx', 'gutscheinElfliq',
+                'gutscheinElfx', 'gutscheinElfliq', 'geschenkTurboArtikelIds', 'gutscheinTurbo',
             ] as $schluessel) {
                 $werte[$schluessel] = $this->config->get(self::PLUGIN . '.' . $schluessel);
             }

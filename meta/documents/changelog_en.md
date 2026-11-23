@@ -1,5 +1,10 @@
 # Release notes for VaporAktion2Test
 
+## 0.5.0
+- Third gift: **1x ELFA Turbo Pod Kit free** (colour selection), same pattern as ELFX: real position at normal price + own promotion coupon (fixed amount).
+- New settings: `geschenkTurboArtikelIds` (default 13604, 15833) and `gutscheinTurbo` (default empty).
+- Without coupon code or item IDs Turbo is hidden – same behaviour as 0.4.2.
+
 ## 0.4.2
 - Ungeteilte Pakete (itemType 11) zählen mit: elfbargermany verkauft ELFLIQ als Sammelartikel 14158 (ELFLIQ-V).
 

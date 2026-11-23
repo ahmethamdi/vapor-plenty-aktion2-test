@@ -10,6 +10,10 @@ class Einstellungen
 {
     const GRUPPE_ELFX   = 'elfx';
     const GRUPPE_ELFLIQ = 'elfliq';
+    const GRUPPE_TURBO  = 'turbo';
+
+    /** Geçerli hediye grupları. */
+    const GRUPPEN = [self::GRUPPE_ELFX, self::GRUPPE_ELFLIQ, self::GRUPPE_TURBO];
 
     /** Sipariş başına en fazla hediye (Plenty sepetinde aynı anda tek kupon olduğu için şimdilik 1). */
     const MAX_GESCHENKE = 1;
@@ -47,6 +51,12 @@ class Einstellungen
     /** @var string */
     public $gutscheinElfliq = '';
 
+    /** @var int[] 0.5.0: ELFA Turbo Pod Kit hediyesi (Artikel-IDs) */
+    public $geschenkTurboArtikelIds = [];
+
+    /** @var string 0.5.0: Turbo kupon kodu; boşsa Turbo seçeneği yok (0.4.2 davranışı) */
+    public $gutscheinTurbo = '';
+
     /**
      * @param array $werte Anahtar => ham ayar değeri (ConfigRepository'den, önek olmadan)
      */
@@ -67,6 +77,8 @@ class Einstellungen
         $e->geschenkElfliqErlaubt  = self::bool($werte['geschenkElfliqErlaubt'] ?? true, true);
         $e->gutscheinElfx          = self::code($werte['gutscheinElfx'] ?? '');
         $e->gutscheinElfliq        = self::code($werte['gutscheinElfliq'] ?? '');
+        $e->geschenkTurboArtikelIds = self::idListe($werte['geschenkTurboArtikelIds'] ?? '');
+        $e->gutscheinTurbo         = self::code($werte['gutscheinTurbo'] ?? '');
         return $e;
     }
 
@@ -74,7 +86,7 @@ class Einstellungen
     public function unsereCodes(): array
     {
         $codes = [];
-        foreach ([$this->gutscheinElfx, $this->gutscheinElfliq] as $code) {
+        foreach ([$this->gutscheinElfx, $this->gutscheinElfliq, $this->gutscheinTurbo] as $code) {
             if ($code !== '') {
                 $codes[] = $code;
             }
@@ -96,6 +108,9 @@ class Einstellungen
         if ($gruppe === self::GRUPPE_ELFLIQ) {
             return $this->gutscheinElfliq;
         }
+        if ($gruppe === self::GRUPPE_TURBO) {
+            return $this->gutscheinTurbo;
+        }
         return '';
     }
 
@@ -111,6 +126,38 @@ class Einstellungen
         return $this->geschenkElfliqErlaubt
             && (count($this->aktionsArtikelIds) > 0 || count($this->aktionsVariationIds) > 0)
             && $this->gutscheinElfliq !== '';
+    }
+
+    /** ELFA Turbo hediyesi seçilebilir mi (cihaz listesi + kod dolu)? İkisinden biri boşsa Turbo hiç görünmez. */
+    public function turboMoeglich(): bool
+    {
+        return count($this->geschenkTurboArtikelIds) > 0 && $this->gutscheinTurbo !== '';
+    }
+
+    /** Grup şu an seçilebilir mi? */
+    public function gruppeMoeglich(string $gruppe): bool
+    {
+        if ($gruppe === self::GRUPPE_ELFX) {
+            return $this->elfxMoeglich();
+        }
+        if ($gruppe === self::GRUPPE_ELFLIQ) {
+            return $this->elfliqMoeglich();
+        }
+        if ($gruppe === self::GRUPPE_TURBO) {
+            return $this->turboMoeglich();
+        }
+        return false;
+    }
+
+    /** En az bir hediye grubu seçilebilir mi? */
+    public function irgendeinGeschenkMoeglich(): bool
+    {
+        return $this->elfxMoeglich() || $this->elfliqMoeglich() || $this->turboMoeglich();
+    }
+
+    public function istTurboArtikel(int $itemId): bool
+    {
+        return $itemId > 0 && in_array($itemId, $this->geschenkTurboArtikelIds, true);
     }
 
     public function istAktionsArtikel(int $itemId, int $variationId): bool

@@ -9,7 +9,8 @@ namespace VaporAktion2Test\Helpers;
  * Çıktı: durum + uygulanacak işlemler listesi (GeschenkService bunları Plenty'de yürütür).
  *
  * Sepet satırı biçimi: ['id' => int, 'variationId' => int, 'itemId' => int, 'menge' => float, 'typ' => int]
- * Oturumdaki hediye:  ['variationId' => int, 'gruppe' => 'elfx'|'elfliq'] ya da null
+ * Oturumdaki hediye:  ['variationId' => int, 'gruppe' => 'elfx'|'elfliq'|'turbo'] ya da null
+ * Cihaz hediyeleri (ELFX, ELFA Turbo) ayrı satırdır ve her zaman tam 1 adet.
  *
  * ELFLIQ hediyesi aynı varyasyonun ücretli satırıyla birleşebilir (IO BasketService::addDataToBasket aynı
  * varyasyonu tek satırda toplar). Bu yüzden ELFLIQ hediyesi "satırdaki 1 adet" olarak düşünülür:
@@ -117,8 +118,8 @@ class Regel
             $ergebnis['geschenk']      = $geschenk;
             $ergebnis['geschenkZeile'] = $geschenkZeile;
 
-            // ELFX hediyesi her zaman tam 1 adet
-            if ($geschenk['gruppe'] === Einstellungen::GRUPPE_ELFX && (float)$geschenkZeile['menge'] !== 1.0) {
+            // Cihaz hediyesi (ELFX / Turbo) her zaman tam 1 adet
+            if (self::istGeraet($geschenk['gruppe']) && (float)$geschenkZeile['menge'] !== 1.0) {
                 $ergebnis['aktionen'][] = [
                     'typ'         => self::AKTION_MENGE_SETZEN,
                     'zeilenId'    => $geschenkZeile['id'],
@@ -171,19 +172,13 @@ class Regel
         }
 
         $gruppe = (string)($option['gruppe'] ?? '');
-        if ($gruppe === Einstellungen::GRUPPE_ELFX && !$e->elfxMoeglich()) {
-            return 'fehlerNichtVerfuegbar';
-        }
-        if ($gruppe === Einstellungen::GRUPPE_ELFLIQ && !$e->elfliqMoeglich()) {
-            return 'fehlerNichtVerfuegbar';
-        }
-        if ($gruppe !== Einstellungen::GRUPPE_ELFX && $gruppe !== Einstellungen::GRUPPE_ELFLIQ) {
+        if (!$e->gruppeMoeglich($gruppe)) {
             return 'fehlerNichtVerfuegbar';
         }
 
-        // Aynı ELFX zaten ücretli olarak sepette: satır birleşir, "adet 1" kuralı müşterinin cihazını keserdi.
+        // Aynı cihaz (ELFX / Turbo) zaten ücretli olarak sepette: satır birleşir, "adet 1" kuralı müşterinin cihazını keserdi.
         $alt = self::geschenkNormalisieren($geschenkAlt);
-        if ($gruppe === Einstellungen::GRUPPE_ELFX) {
+        if (self::istGeraet($gruppe)) {
             $vorhanden = self::zeileFinden($zeilen, (int)$option['variationId']);
             $istAltesGeschenk = $alt !== null && $alt['variationId'] === (int)$option['variationId'];
             if ($vorhanden !== null && !$istAltesGeschenk) {
@@ -237,6 +232,12 @@ class Regel
         return ['typ' => self::AKTION_ZEILE_ENTFERNEN, 'zeilenId' => $zeile['id']];
     }
 
+    /** Cihaz grubu mu (ayrı satır, adet 1)? ELFLIQ hediyesi ücretli satırla birleşebildiği için cihaz değildir. */
+    public static function istGeraet(string $gruppe): bool
+    {
+        return $gruppe === Einstellungen::GRUPPE_ELFX || $gruppe === Einstellungen::GRUPPE_TURBO;
+    }
+
     private static function geschenkPasstZuGruppe(Einstellungen $e, array $geschenk, array $zeile): bool
     {
         if ($geschenk['gruppe'] === Einstellungen::GRUPPE_ELFX) {
@@ -244,6 +245,9 @@ class Regel
         }
         if ($geschenk['gruppe'] === Einstellungen::GRUPPE_ELFLIQ) {
             return $e->geschenkElfliqErlaubt && $e->istAktionsArtikel((int)$zeile['itemId'], (int)$zeile['variationId']);
+        }
+        if ($geschenk['gruppe'] === Einstellungen::GRUPPE_TURBO) {
+            return $e->istTurboArtikel((int)$zeile['itemId']);
         }
         return false;
     }
@@ -255,7 +259,7 @@ class Regel
         }
         $variationId = (int)($geschenk['variationId'] ?? 0);
         $gruppe      = (string)($geschenk['gruppe'] ?? '');
-        if ($variationId <= 0 || ($gruppe !== Einstellungen::GRUPPE_ELFX && $gruppe !== Einstellungen::GRUPPE_ELFLIQ)) {
+        if ($variationId <= 0 || !in_array($gruppe, Einstellungen::GRUPPEN, true)) {
             return null;
         }
         return ['variationId' => $variationId, 'gruppe' => $gruppe];

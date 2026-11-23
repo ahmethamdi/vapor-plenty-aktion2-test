@@ -1,6 +1,6 @@
 # VaporAktion2Test
 
-PlentyONE / plentyShop LTS 5 (IO 5.0.x) kampanya eklentisi: **6 Aktions-Artikel (ELFLIQ) al → 1 ELFLIQ ya da 1 ELFX Pod Kit hediye.**
+PlentyONE / plentyShop LTS 5 (IO 5.0.x) kampanya eklentisi: **6 Aktions-Artikel (ELFLIQ) al → 1 ELFLIQ, 1 ELFX Pod Kit ya da (0.5.0) 1 ELFA Turbo Pod Kit hediye.**
 
 Hediye gerçek varyasyon olarak tam fiyatla sepete girer; panelde açılan **Aktionsgutschein** (Festbetrag) fiyatı sıfırlar. Seçim, sepet sayfasındaki (ve sepet önizlemesindeki) kutudan yapılır.
 

@@ -20,12 +20,14 @@ use VaporAktion2Test\Services\KatalogService;
 
 class FakeKatalog extends KatalogService
 {
-    public $liste = ['elfx' => [], 'elfliq' => []];
+    public $liste = ['elfx' => [], 'elfliq' => [], 'turbo' => []];
     public function optionen(Einstellungen $e): array
     {
-        $r = ['elfx' => [], 'elfliq' => []];
+        $r = ['elfx' => [], 'elfliq' => [], 'turbo' => []];
         if ($e->elfxMoeglich()) { $r['elfx'] = $this->liste['elfx']; }
         if ($e->elfliqMoeglich()) { $r['elfliq'] = $this->liste['elfliq']; }
+        // Gerçek KatalogService gibi: isSalable=false (stoksuz) varyasyonlar gelmez
+        if ($e->turboMoeglich()) { $r['turbo'] = array_values(array_filter($this->liste['turbo'], function ($o) { return !empty($o['satilabilir']); })); }
         return $r;
     }
 }
@@ -44,15 +46,20 @@ const ELFLIQ_B = 87140;
 const ELFX     = 7880;
 const ELFX_2   = 7881;
 const ANDERS   = 5000;
+// elfbargermany ELFA Turbo (End of Life, 7,99): Aurora Gold item 13604 / var 5891, Black Knight item 15833 / var 10808
+const TURBO_G  = 5891;
+const TURBO_B  = 10808;
+const TURBO_X  = 5889; // stoksuz test rengi (satılabilir değil)
 
 function welt(array $ayar = []): array
 {
     $w = new FakeWelt();
-    $w->artikelVon = [ELFLIQ_A => 24534, ELFLIQ_B => 24535, ELFX => 14359, ELFX_2 => 14359, ANDERS => 999];
+    $w->artikelVon = [ELFLIQ_A => 24534, ELFLIQ_B => 24535, ELFX => 14359, ELFX_2 => 14359, ANDERS => 999, TURBO_G => 13604, TURBO_B => 15833, TURBO_X => 13602];
     $w->kupons = [
         'ELFXCODE00000001' => ['itemIds' => [14359], 'betrag' => 16.99],
         'ELFLIQCODE000001' => ['itemIds' => [24534, 24535], 'betrag' => 8.49],
-        'FREMD10'          => ['itemIds' => [999, 24534, 24535, 14359], 'betrag' => 1.0],
+        'TURBOCODE0000001' => ['itemIds' => [13604, 15833, 13602], 'betrag' => 7.99],
+        'FREMD10'          => ['itemIds' => [999, 24534, 24535, 14359, 13604, 15833], 'betrag' => 1.0],
     ];
     $w->kontaktId = 591963;
 
@@ -75,6 +82,11 @@ function welt(array $ayar = []): array
         'elfliq' => [
             ['variationId' => ELFLIQ_A, 'itemId' => 24534, 'gruppe' => 'elfliq', 'name' => 'ELFLIQ DFBB 10 mg', 'preis' => '8,49 €'],
             ['variationId' => ELFLIQ_B, 'itemId' => 24535, 'gruppe' => 'elfliq', 'name' => 'ELFLIQ Mango 10 mg', 'preis' => '8,49 €'],
+        ],
+        'turbo'  => [
+            ['variationId' => TURBO_G, 'itemId' => 13604, 'gruppe' => 'turbo', 'name' => 'ELFA Turbo – Aurora Gold', 'preis' => '7,99 €', 'satilabilir' => true],
+            ['variationId' => TURBO_B, 'itemId' => 15833, 'gruppe' => 'turbo', 'name' => 'ELFA Turbo – Black Knight', 'preis' => '7,99 €', 'satilabilir' => true],
+            ['variationId' => TURBO_X, 'itemId' => 13602, 'gruppe' => 'turbo', 'name' => 'ELFA Turbo – Aurora Purple', 'preis' => '7,99 €', 'satilabilir' => false],
         ],
     ];
     $s = new GeschenkService($config, $w, $w, $w, $w, $katalog);
@@ -252,6 +264,131 @@ $w->zeile(ELFLIQ_A, 6);
 $s->waehlen(ELFX);
 $w->session['VaporAktion2Test_geschenk'] = '{bozuk json';
 pruefe('bozuk oturum verisi patlatmaz', $s->pruefen() === true && $w->coupon === '');
+
+
+echo "Turbo (0.5.0)\n";
+$turbo = ['geschenkTurboArtikelIds' => '13604, 15833, 13602', 'gutscheinTurbo' => 'turbocode0000001'];
+
+// T1) Ayar yok → 0.4.2 davranışı: Turbo görünmez, seçilemez
+[$w, $s] = welt();
+$w->zeile(ELFLIQ_A, 6);
+$st = $s->status();
+pruefe('T1 ayarsız: turbo seçeneği yok', $st['berechtigt'] && count($st['optionen']['turbo']) === 0 && count($st['optionen']['elfx']) === 2 && count($st['optionen']['elfliq']) === 2);
+$r = $s->waehlen(TURBO_G);
+pruefe('T1 ayarsız: turbo seçimi reddedilir', !$r['ok'] && $w->menge(TURBO_G) == 0.0 && $w->coupon === '');
+[$w, $s] = welt(['geschenkTurboArtikelIds' => '13604, 15833']);
+$w->zeile(ELFLIQ_A, 6);
+pruefe('T1 kod boş + ID dolu: turbo yok', count($s->status()['optionen']['turbo']) === 0);
+[$w, $s] = welt(['gutscheinTurbo' => 'TURBOCODE0000001']);
+$w->zeile(ELFLIQ_A, 6);
+pruefe('T1 ID boş + kod dolu: turbo yok', count($s->status()['optionen']['turbo']) === 0);
+pruefe('T1 turboMoeglich ayarsız false', Einstellungen::ausArray([])->turboMoeglich() === false);
+pruefe('T1 turbo kodu unsereCodes içinde', Einstellungen::ausArray($turbo)->istUnserCode('TURBOCODE0000001'));
+[$w, $s] = welt(['geschenkElfxArtikelIds' => '', 'gutscheinElfliq' => '']);
+$w->zeile(ELFLIQ_A, 6);
+pruefe('T1 yalnız turbo da yoksa kutu gizli', $s->status()['sichtbar'] === false);
+[$w, $s] = welt(['geschenkElfxArtikelIds' => '', 'gutscheinElfliq' => ''] + $turbo);
+$w->zeile(ELFLIQ_A, 6);
+pruefe('T1 yalnız turbo ayarlıysa kutu görünür', $s->status()['sichtbar'] === true);
+
+// T2) 6 adet → Turbo seç → satır 1 adet + Turbo kuponu; stoksuz renk listede yok
+[$w, $s] = welt($turbo);
+$w->zeile(ELFLIQ_A, 6);
+$st = $s->status();
+$ids = array_map(function ($o) { return $o['variationId']; }, $st['optionen']['turbo']);
+pruefe('T2 turbo seçenekleri: 2 satılabilir renk', $ids === [TURBO_G, TURBO_B]);
+pruefe('T2 stoksuz renk listede yok', !in_array(TURBO_X, $ids, true));
+pruefe('T2 metin gruppeTurbo var', isset($st['texte']['gruppeTurbo']));
+$r = $s->waehlen(TURBO_X);
+pruefe('T2 stoksuz renk seçilemez', !$r['ok'] && $w->menge(TURBO_X) == 0.0);
+$r = $s->waehlen(TURBO_B);
+pruefe('T2 turbo eklendi + kupon', $r['ok'] && $w->menge(TURBO_B) == 1.0 && $w->coupon === 'TURBOCODE0000001');
+pruefe('T2 durum: hediye turbo', $r['geschenk']['gruppe'] === 'turbo' && $r['geschenk']['name'] === 'ELFA Turbo – Black Knight');
+pruefe('T2 ELFLIQ sayımı değişmedi', $r['bezahlt'] === 6 && $w->menge(ELFLIQ_A) == 6.0);
+
+// T3) Turbo adedi 3 → 1
+foreach ($w->zeilen as $zz) { if ($zz->variationId === TURBO_B) { $zz->quantity = 3; } }
+pruefe('T3 turbo adedi 1e çekildi', $s->pruefen() && $w->menge(TURBO_B) == 1.0);
+
+// T4) Kupon düşerse geri gelir
+$w->coupon = '';
+$s->pruefen();
+pruefe('T4 turbo kuponu yeniden kondu', $w->coupon === 'TURBOCODE0000001');
+
+// T5) 6'nın altına düşünce Turbo + kupon gider
+foreach ($w->zeilen as $zz) { if ($zz->variationId === ELFLIQ_A) { $zz->quantity = 5; } }
+$s->pruefen();
+pruefe('T5 hak düşünce turbo satırı silindi', $w->menge(TURBO_B) == 0.0);
+pruefe('T5 hak düşünce turbo kuponu silindi', $w->coupon === '');
+pruefe('T5 ELFLIQ satırına dokunulmadı', $w->menge(ELFLIQ_A) == 5.0);
+
+// T6) Müşteri kaldırır
+[$w, $s] = welt($turbo);
+$w->zeile(ELFLIQ_A, 6);
+$s->waehlen(TURBO_G);
+$r = $s->entfernen();
+pruefe('T6 kaldır: turbo satırı + kupon gitti', $w->menge(TURBO_G) == 0.0 && $w->coupon === '' && $r['geschenk'] === null);
+
+// T7) Değiştir: ELFX → Turbo → ELFLIQ
+[$w, $s] = welt($turbo);
+$w->zeile(ELFLIQ_A, 6);
+$s->waehlen(ELFX);
+$r = $s->waehlen(TURBO_G);
+pruefe('T7 ELFX→Turbo: ELFX gitti, turbo + turbo kuponu', $r['ok'] && $w->menge(ELFX) == 0.0 && $w->menge(TURBO_G) == 1.0 && $w->coupon === 'TURBOCODE0000001');
+$r = $s->waehlen(ELFLIQ_A);
+pruefe('T7 Turbo→ELFLIQ: turbo gitti, ELFLIQ 7 + ELFLIQ kuponu', $r['ok'] && $w->menge(TURBO_G) == 0.0 && $w->menge(ELFLIQ_A) == 7.0 && $w->coupon === 'ELFLIQCODE000001');
+
+// T8) Aynı Turbo rengi ücretli sepette → red
+[$w, $s] = welt($turbo);
+$w->zeile(ELFLIQ_A, 6);
+$w->zeile(TURBO_G, 1);
+$r = $s->waehlen(TURBO_G);
+pruefe('T8 ücretli aynı turbo: red', !$r['ok'] && strpos($r['meldung'], 'fehlerGeraetImWarenkorb') !== false && $w->menge(TURBO_G) == 1.0 && $w->coupon === '');
+
+// T9) Yabancı kupon: hediye varken girilirse turbo gider, yabancı kupon kalır
+[$w, $s] = welt($turbo);
+$w->zeile(ELFLIQ_A, 6);
+$s->waehlen(TURBO_G);
+$w->coupon = 'FREMD10';
+pruefe('T9 yabancı kupon: turbo silindi', $s->pruefen('kasse') && $w->menge(TURBO_G) == 0.0 && $w->coupon === 'FREMD10');
+
+// T10) Sızıntı: test dışı müşteri turbo kodunu girer → silinir, ücretli turbo kalır
+[$w, $s] = welt($turbo);
+$w->kontaktId = 12345;
+$w->zeile(TURBO_G, 1);
+$w->coupon = 'TURBOCODE0000001';
+$s->pruefen();
+pruefe('T10 test dışı müşteride turbo kodu silindi', $w->coupon === '' && $w->menge(TURBO_G) == 1.0);
+[$w, $s] = welt();
+$w->kontaktId = 0;
+$w->zeile(TURBO_G, 1);
+$w->coupon = 'TURBOCODE0000001';
+$s->pruefen();
+pruefe('T10 turbo kodu ayarda yokken dokunulmaz (0.4.2 gibi)', $w->coupon === 'TURBOCODE0000001');
+
+// T11) Turbo kodu sonradan ayardan silinirse sepetteki turbo hediyesi kalkar
+[$w, $s] = welt($turbo);
+$w->zeile(ELFLIQ_A, 6);
+$s->waehlen(TURBO_G);
+$sess = $w->session;
+[$w2, $s2] = welt(['geschenkTurboArtikelIds' => '13604, 15833, 13602', 'gutscheinTurbo' => '']);
+$w2->zeilen = $w->zeilen; $w2->session = $sess; $w2->coupon = 'TURBOCODE0000001';
+$s2->pruefen();
+pruefe('T11 kod boşaltıldı: turbo satırı silindi', $w2->menge(TURBO_G) == 0.0);
+[$w3, $s3] = welt(['geschenkTurboArtikelIds' => '', 'gutscheinTurbo' => 'TURBOCODE0000001']);
+$w3->zeile(ELFLIQ_A, 6); $w3->zeile(TURBO_G, 1); $w3->session = $sess; $w3->coupon = 'TURBOCODE0000001';
+$s3->pruefen();
+pruefe('T11 ID listesi boşaltıldı: turbo + kupon gitti', $w3->menge(TURBO_G) == 0.0 && $w3->coupon === '');
+
+// T12) Kupon kampanyası çalışmıyorsa turbo tam fiyatla kalmaz
+[$w, $s] = welt($turbo);
+unset($w->kupons['TURBOCODE0000001']);
+$w->zeile(ELFLIQ_A, 6);
+$r = $s->waehlen(TURBO_G);
+pruefe('T12 kupon geçersiz: turbo eklenmedi', !$r['ok'] && $w->menge(TURBO_G) == 0.0 && strpos($r['meldung'], 'fehlerGutschein') !== false);
+
+// T13) Katalog arama anahtarı → grup
+pruefe('T13 arama anahtarı turbo', KatalogService::gruppeFuerSuche('turbo') === 'turbo' && KatalogService::gruppeFuerSuche('elfx') === 'elfx' && KatalogService::gruppeFuerSuche('elfliqArtikel') === 'elfliq');
 
 echo "\n$basari test geçti, " . count($hatalar) . " hata.\n";
 exit(count($hatalar) === 0 ? 0 : 1);

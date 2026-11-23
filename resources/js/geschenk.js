@@ -21,7 +21,8 @@
     var laedt = false;
     var nochmal = false;       // während des Ladens kam ein neues Ereignis
     var auswahlOffen = false;  // "Ändern" geklickt
-    var gewaehlteGruppe = "";  // elfx | elfliq
+    var gewaehlteGruppe = "";  // elfx | elfliq | turbo
+    var GRUPPEN = ["elfx", "elfliq", "turbo"]; // Reihenfolge der Auswahl
     var meldung = "";
     var meldungOk = false;
     var sendet = false;
@@ -128,6 +129,12 @@
         return zustand.optionen[gruppe];
     }
 
+    function gruppenName(gruppe, t) {
+        if (gruppe === "elfx") { return t.gruppeElfx; }
+        if (gruppe === "turbo") { return t.gruppeTurbo; }
+        return t.gruppeElfliq;
+    }
+
     function svgGeschenk() {
         return '<svg class="va2-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">' +
             '<path fill="currentColor" d="M20 7h-2.2A3 3 0 0 0 12 3.8 3 3 0 0 0 6.2 7H4a1 1 0 0 0-1 1v3a1 1 0 0 0 1 1h1v8a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-8h1a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1Zm-5-2a1 1 0 1 1 0 2h-2V6a1 1 0 0 1 2-1ZM9 5a1 1 0 0 1 2 1v1H9a1 1 0 1 1 0-2ZM5 9h6v1H5V9Zm2 3h4v7H7v-7Zm10 7h-4v-7h4v7Zm2-9h-6V9h6v1Z"/>' +
@@ -148,7 +155,7 @@
             teile.push(
                 '<div class="va2-geschenk">' +
                     '<span class="va2-label">' + esc(t.deinGeschenk) + "</span> " +
-                    '<span class="va2-name">' + esc(g.name || (g.gruppe === "elfx" ? t.gruppeElfx : t.gruppeElfliq)) + "</span> " +
+                    '<span class="va2-name">' + esc(g.name || gruppenName(g.gruppe, t)) + "</span> " +
                     '<span class="va2-gratis">' + esc(t.gratis) + "</span>" +
                     (g.preis ? ' <span class="va2-statt">' + esc(t.statt) + " " + esc(g.preis) + "</span>" : "") +
                 "</div>" +
@@ -180,9 +187,8 @@
     }
 
     function auswahlHtml(uid, t) {
-        var gruppen = [];
-        if (optionenListe("elfx").length) { gruppen.push("elfx"); }
-        if (optionenListe("elfliq").length) { gruppen.push("elfliq"); }
+        // Nur Gruppen mit Optionen: Turbo erscheint nur, wenn Server Optionen liefert (Code + Artikel-IDs gesetzt, Variation verkäuflich)
+        var gruppen = GRUPPEN.filter(function (g) { return optionenListe(g).length > 0; });
 
         if (!gruppen.length) {
             return '<p class="va2-text">' + esc(t.keineOptionen) + "</p>";
@@ -201,7 +207,7 @@
                 teile.push(
                     '<label class="va2-gruppe' + (g === gewaehlteGruppe ? " va2-aktiv" : "") + '" for="' + id + '">' +
                         '<input type="radio" id="' + id + '" name="va2-gruppe-' + uid + '" value="' + g + '" data-va2-gruppe' + (g === gewaehlteGruppe ? " checked" : "") + "> " +
-                        esc(g === "elfx" ? t.gruppeElfx : t.gruppeElfliq) +
+                        esc(gruppenName(g, t)) +
                     "</label>"
                 );
             });
@@ -210,7 +216,7 @@
 
         var aktuell = zustand.geschenk ? zustand.geschenk.variationId : 0;
         var selectId = "va2-s-" + uid;
-        teile.push('<label class="sr-only" for="' + selectId + '">' + esc(gewaehlteGruppe === "elfx" ? t.gruppeElfx : t.gruppeElfliq) + "</label>");
+        teile.push('<label class="sr-only" for="' + selectId + '">' + esc(gruppenName(gewaehlteGruppe, t)) + "</label>");
         teile.push('<select id="' + selectId + '" class="custom-select va2-select" data-va2-select>');
         teile.push('<option value="">' + esc(t.auswahlPlatzhalter) + "</option>");
         optionenListe(gewaehlteGruppe).forEach(function (o) {

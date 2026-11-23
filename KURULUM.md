@@ -128,6 +128,24 @@ Bilinen sınırlar:
 2. Kesin kapatma: panelde iki **kupon kampanyasını pasif yap** (en hızlı yol; bereitstellen gerekmez).
 3. Gerekirse sette eklentinin **Aktiv** işaretini kaldır → bereitstellen.
 
+## 0.5.0 — ELFA Turbo hediyesi (elfbargermany, set 61)
+
+ELFX ile aynı desen: Turbo gerçek satır olarak 7,99 € ile girer, kendi Aktionsgutschein'i sıfırlar.
+**Kod ya da ID listesi boşsa Turbo görünmez → 0.4.2 davranışı birebir.**
+
+Ölçülen (23.11.2026, REST yalnız okuma + vitrin):
+| Renk | Item | Variation | Vitrin fiyatı | Stok (Vapor Handels, netto) |
+|---|---|---|---|---|
+| Aurora Gold – End of Life | 13604 | 5891 | 7,99 € | 4268 |
+| Black Knight – End of Life | 15833 | 10808 | 7,99 € | 6589 |
+
+İkisi de aktif, stockLimitation 1 (stok 0 olunca listeden kendiliğinden düşer), 62081 (elfbargermany) + 62082 (24vapestore) mandantlarına bağlı; Black Knight Lostmary'ye (65060) bağlı değil.
+
+1. Kupon: Aktionsgutschein, Festbetrag **7,99**, Artikel filtresi **13604, 15833**, Kundenklasse **B2C (ID 2)** işaretli, yalnız elfbargermany; Codes sekmesi „Anzahl der Einlösungen erhöhen um“ **100000** (yoksa kod 1 kullanımlık → 1070).
+2. Set 61'de bereitstellen.
+3. Konfiguration: „Geschenk ELFA Turbo Pod Kit (Artikel-IDs)“ = `13604, 15833` (varsayılan), „Gutscheincode ELFA-Turbo-Geschenk“ = kupon kodu.
+4. Container bağlantıları değişmez.
+
 ## Teknik (geliştirici)
 
 - `src/Helpers/Regel.php`: saf kural (sayım, hak, kaldır/kupon kararları); `tests/run.php` bunu ve servisi sahte Plenty sınıflarıyla test eder (`php tests/run.php`).
