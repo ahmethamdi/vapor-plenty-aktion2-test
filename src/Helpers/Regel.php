@@ -24,7 +24,7 @@ class Regel
     const AKTION_VERGESSEN        = 'geschenkVergessen';
 
     /** Sayılan satır tipleri: normal varyasyon (10) ve tipi boş eski satırlar (0). Paket/set bileşenleri sayılmaz. */
-    const ZAEHLBARE_TYPEN = [0, 10];
+    const ZAEHLBARE_TYPEN = [0, 10, 11]; // 11 = ungeteiltes Paket (elfbargermany: ELFLIQ-V Sammelartikel 14158)
 
     /**
      * Sepeti kurala göre değerlendir.

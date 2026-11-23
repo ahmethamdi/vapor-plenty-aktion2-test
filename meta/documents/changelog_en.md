@@ -1,5 +1,8 @@
 # Release notes for VaporAktion2Test
 
+## 0.4.2
+- Ungeteilte Pakete (itemType 11) zählen mit: elfbargermany verkauft ELFLIQ als Sammelartikel 14158 (ELFLIQ-V).
+
 ## 0.4.1
 - Gleicher Code wie 0.2.5 (nur Aktion 2). Versionsnummer erhöht, damit Plenty nach 0.4.0 wieder baut.
 
