@@ -22,15 +22,5 @@ class VaporAktion2TestRouteServiceProvider extends RouteServiceProvider
             $api->post('vapor-aktion2/geschenk', 'GeschenkController@waehlen');
             $api->delete('vapor-aktion2/geschenk', 'GeschenkController@entfernen');
         });
-
-        // Aktion 1 (3 ELFA Pods → 1 ELFA Basisgerät)
-        $api->version(['v1'], ['namespace' => 'VaporAktion2Test\Aktion1'], function (ApiRouter $api) {
-            $api->get('vapor-aktion1/geschenk', 'A1Controller@status');
-        });
-
-        $api->version(['v1'], ['namespace' => 'VaporAktion2Test\Aktion1', 'middleware' => ['csrf']], function (ApiRouter $api) {
-            $api->post('vapor-aktion1/geschenk', 'A1Controller@waehlen');
-            $api->delete('vapor-aktion1/geschenk', 'A1Controller@entfernen');
-        });
     }
 }

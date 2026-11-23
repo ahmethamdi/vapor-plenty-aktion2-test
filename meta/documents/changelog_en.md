@@ -1,5 +1,8 @@
 # Release notes for VaporAktion2Test
 
+## 0.4.0
+- Aktion 1 entfernt (jetzt eigenes Plugin VaporAktion1). Nur noch Aktion 2.
+
 ## v0.3.0 (2026-11-20)
 
 ### Added
