@@ -1,4 +1,4 @@
-# VaporAktion2 – Aktion „Kaufe 6 ELFLIQ, erhalte 1 Geschenk gratis“
+# VaporAktion2Test – Aktion „Kaufe 6 ELFLIQ, erhalte 1 Geschenk gratis“
 
 ## Funktionsweise
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace VaporAktion2\Helpers;
+namespace VaporAktion2Test\Helpers;
 
 /**
  * Kampanya kuralı — saf mantık, Plenty'ye dokunmaz.

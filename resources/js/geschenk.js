@@ -1,5 +1,5 @@
 /*
- * VaporAktion2 – Gratis-Geschenk-Box im Warenkorb (plentyShop LTS 5).
+ * VaporAktion2Test – Gratis-Geschenk-Box im Warenkorb (plentyShop LTS 5).
  *
  * - Füllt alle [data-va2-box] (Warenkorb-Seite + Warenkorb-Vorschau).
  * - Lädt den Status nur, wenn eine Box sichtbar ist (IntersectionObserver).

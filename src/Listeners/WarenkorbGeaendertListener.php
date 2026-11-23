@@ -1,9 +1,9 @@
 <?php
 
-namespace VaporAktion2\Listeners;
+namespace VaporAktion2Test\Listeners;
 
 use Plenty\Modules\Basket\Events\Basket\AfterBasketChanged;
-use VaporAktion2\Services\GeschenkService;
+use VaporAktion2Test\Services\GeschenkService;
 
 /**
  * AfterBasketChanged: her sepet değişiminden (ekleme, silme, adet, kupon) sonra kampanya kuralını uygular.

@@ -1,13 +1,13 @@
 <?php
 
-namespace VaporAktion2\Controllers;
+namespace VaporAktion2Test\Controllers;
 
 use IO\Api\ApiResponse;
 use IO\Api\ResponseCode;
 use Plenty\Plugin\Controller;
 use Plenty\Plugin\Http\Request;
 use Plenty\Plugin\Http\Response;
-use VaporAktion2\Services\GeschenkService;
+use VaporAktion2Test\Services\GeschenkService;
 
 /**
  * REST: /rest/vapor-aktion2/geschenk

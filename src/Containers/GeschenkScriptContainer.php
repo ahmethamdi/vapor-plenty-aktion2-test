@@ -1,6 +1,6 @@
 <?php
 
-namespace VaporAktion2\Containers;
+namespace VaporAktion2Test\Containers;
 
 use Plenty\Plugin\Templates\Twig;
 
@@ -11,6 +11,6 @@ class GeschenkScriptContainer
 {
     public function call(Twig $twig, $arg = null): string
     {
-        return $twig->render('VaporAktion2::Container.Script', ['ort' => '']);
+        return $twig->render('VaporAktion2Test::Container.Script', ['ort' => '']);
     }
 }

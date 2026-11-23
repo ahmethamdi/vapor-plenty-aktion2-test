@@ -4,7 +4,7 @@
 require __DIR__ . '/stubs.php';
 
 spl_autoload_register(function ($klasse) {
-    $onek = 'VaporAktion2\\';
+    $onek = 'VaporAktion2Test\\';
     if (strpos($klasse, $onek) === 0) {
         $dosya = __DIR__ . '/../src/' . str_replace('\\', '/', substr($klasse, strlen($onek))) . '.php';
         if (is_file($dosya)) {
@@ -13,10 +13,10 @@ spl_autoload_register(function ($klasse) {
     }
 });
 
-use VaporAktion2\Helpers\Einstellungen;
-use VaporAktion2\Helpers\Regel;
-use VaporAktion2\Services\GeschenkService;
-use VaporAktion2\Services\KatalogService;
+use VaporAktion2Test\Helpers\Einstellungen;
+use VaporAktion2Test\Helpers\Regel;
+use VaporAktion2Test\Services\GeschenkService;
+use VaporAktion2Test\Services\KatalogService;
 
 class FakeKatalog extends KatalogService
 {
@@ -64,7 +64,7 @@ function welt(array $ayar = []): array
         'gutscheinElfx' => 'elfxcode00000001', 'gutscheinElfliq' => 'ELFLIQCODE000001',
     ];
     foreach (array_merge($standard, $ayar) as $k => $v) {
-        $config->werte['VaporAktion2.' . $k] = $v;
+        $config->werte['VaporAktion2Test.' . $k] = $v;
     }
     $katalog = new FakeKatalog();
     $katalog->liste = [
@@ -151,7 +151,7 @@ foreach ($w->zeilen as $zz) { if ($zz->variationId === ELFLIQ_B) { $zz->quantity
 $s->pruefen();
 pruefe('hak düşünce ELFX satırı silindi', $w->menge(ELFX) == 0.0);
 pruefe('hak düşünce kupon silindi', $w->coupon === '');
-pruefe('oturum temiz', ($w->session['VaporAktion2_geschenk'] ?? '') === '');
+pruefe('oturum temiz', ($w->session['VaporAktion2Test_geschenk'] ?? '') === '');
 pruefe('log: zuWenigArtikel', TestLogger::enthaelt('Log.zuWenigArtikel'));
 
 // 6) ELFLIQ hediyesi aynı varyasyona eklenir (birleşir), sonra ELFX'e değiştirilir
@@ -241,13 +241,13 @@ $s->waehlen(ELFX);
 foreach ($w->zeilen as $id => $zz) { if ($zz->variationId === ELFX) { unset($w->zeilen[$id]); } }
 $w->coupon = 'ELFXCODE00000001'; // Plenty düşürmediyse bile
 $s->pruefen();
-pruefe('hediye satırı silinince kupon da gider', $w->coupon === '' && ($w->session['VaporAktion2_geschenk'] ?? '') === '');
+pruefe('hediye satırı silinince kupon da gider', $w->coupon === '' && ($w->session['VaporAktion2Test_geschenk'] ?? '') === '');
 
 // 17) Döngü kilidi: hata sepeti bozmaz
 [$w, $s] = welt();
 $w->zeile(ELFLIQ_A, 6);
 $s->waehlen(ELFX);
-$w->session['VaporAktion2_geschenk'] = '{bozuk json';
+$w->session['VaporAktion2Test_geschenk'] = '{bozuk json';
 pruefe('bozuk oturum verisi patlatmaz', $s->pruefen() === true && $w->coupon === '');
 
 echo "\n$basari test geçti, " . count($hatalar) . " hata.\n";

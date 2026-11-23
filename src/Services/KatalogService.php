@@ -1,11 +1,11 @@
 <?php
 
-namespace VaporAktion2\Services;
+namespace VaporAktion2Test\Services;
 
 use Plenty\Modules\Webshop\ItemSearch\Factories\VariationSearchFactory;
 use Plenty\Modules\Webshop\ItemSearch\Services\ItemSearchService;
 use Plenty\Plugin\Log\Loggable;
-use VaporAktion2\Helpers\Einstellungen;
+use VaporAktion2Test\Helpers\Einstellungen;
 
 /**
  * Hediye seçeneklerini webshop arama motorundan (Elasticsearch) okur.
@@ -66,7 +66,7 @@ class KatalogService
                 }
             }
         } catch (\Throwable $ex) {
-            $this->getLogger('KatalogService_optionen')->error('VaporAktion2::Log.katalogFehler', [
+            $this->getLogger('KatalogService_optionen')->error('VaporAktion2Test::Log.katalogFehler', [
                 'meldung' => $ex->getMessage(),
                 'code'    => $ex->getCode(),
             ]);
