@@ -2,7 +2,7 @@
 
 ## 0.5.0
 - Third gift: **1x ELFA Turbo Pod Kit free** (colour selection), same pattern as ELFX: real position at normal price + own promotion coupon (fixed amount).
-- New settings: `geschenkTurboArtikelIds` (default 13604, 15833) and `gutscheinTurbo` (default empty).
+- New settings: `geschenkTurboArtikelIds` (default 13604, 15833) and `gutscheinTurbo` (default XZGPFR6Z4CTCR9K6, elfbargermany campaign 7.99).
 - Without coupon code or item IDs Turbo is hidden – same behaviour as 0.4.2.
 
 ## 0.4.2

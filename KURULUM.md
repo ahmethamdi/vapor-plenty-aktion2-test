@@ -143,7 +143,7 @@ ELFX ile aynı desen: Turbo gerçek satır olarak 7,99 € ile girer, kendi Akti
 
 1. Kupon: Aktionsgutschein, Festbetrag **7,99**, Artikel filtresi **13604, 15833**, Kundenklasse **B2C (ID 2)** işaretli, yalnız elfbargermany; Codes sekmesi „Anzahl der Einlösungen erhöhen um“ **100000** (yoksa kod 1 kullanımlık → 1070).
 2. Set 61'de bereitstellen.
-3. Konfiguration: „Geschenk ELFA Turbo Pod Kit (Artikel-IDs)“ = `13604, 15833` (varsayılan), „Gutscheincode ELFA-Turbo-Geschenk“ = kupon kodu.
+3. Konfiguration: „Geschenk ELFA Turbo Pod Kit (Artikel-IDs)“ = `13604, 15833` (varsayılan), „Gutscheincode ELFA-Turbo-Geschenk“ = `XZGPFR6Z4CTCR9K6` (varsayılan; kullanıcı 23.11. açtı).
 4. Container bağlantıları değişmez.
 
 ## Teknik (geliştirici)

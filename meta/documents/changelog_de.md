@@ -2,7 +2,7 @@
 
 ## 0.5.0
 - Drittes Geschenk: **1x ELFA Turbo Pod Kit gratis** (Farbauswahl), gleiches Muster wie ELFX: echte Position zum Normalpreis + eigener Aktionsgutschein (Festbetrag).
-- Neue Einstellungen: „Geschenk ELFA Turbo Pod Kit (Artikel-IDs)“ (`geschenkTurboArtikelIds`, Standard 13604, 15833) und „Gutscheincode ELFA-Turbo-Geschenk“ (`gutscheinTurbo`, Standard leer).
+- Neue Einstellungen: „Geschenk ELFA Turbo Pod Kit (Artikel-IDs)“ (`geschenkTurboArtikelIds`, Standard 13604, 15833) und „Gutscheincode ELFA-Turbo-Geschenk“ (`gutscheinTurbo`, Standard XZGPFR6Z4CTCR9K6 = Kampagne Festbetrag 7,99, Artikel 13604 + 15833, nur elfbargermany).
 - Ohne Gutscheincode oder ohne Artikel-IDs erscheint Turbo nicht – Verhalten wie 0.4.2.
 - Turbo wird wie ELFX behandelt: immer Menge 1, entfällt unter 6 Aktions-Artikeln samt Gutschein, nicht wählbar, wenn dieselbe Farbe schon bezahlt im Warenkorb liegt. Nicht verkäufliche (ohne Bestand) Farben werden nicht angezeigt.
 
