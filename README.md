@@ -1,4 +1,4 @@
-# VaporAktion2Test
+# VaporAktion2
 
 PlentyONE / plentyShop LTS 5 (IO 5.0.x) kampanya eklentisi: **6 Aktions-Artikel (ELFLIQ) al → 1 ELFLIQ ya da 1 ELFX Pod Kit hediye.**
 

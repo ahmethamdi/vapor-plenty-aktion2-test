@@ -1,6 +1,6 @@
 <?php
 
-namespace VaporAktion2Test\Helpers;
+namespace VaporAktion2\Helpers;
 
 /**
  * Eklenti ayarlarının (config.json) okunmuş, temizlenmiş hâli.

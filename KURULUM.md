@@ -1,4 +1,4 @@
-# Kurulum ve test — VaporAktion2Test 0.2.0 (dal `kampagne`)
+# Kurulum ve test — VaporAktion2 0.2.0 (dal `kampagne`)
 
 Kampanya: **6 Aktions-Artikel (ELFLIQ) al → 1 ELFLIQ ya da 1 ELFX Pod Kit hediye.**
 
@@ -13,7 +13,7 @@ hediye **gerçek varyasyon, tam fiyatla** sepete girer → eklenti aynı anda he
 
 `main` eski deneme sürümü (0.1.x) olarak kalır; yeni sürüm `kampagne` dalında.
 
-1. Plugins » Plugin-Set-Übersicht » **Lostmarygermany.de** setini aç » **VaporAktion2Test** satırı.
+1. Plugins » Plugin-Set-Übersicht » **Lostmarygermany.de** setini aç » **VaporAktion2** satırı.
 2. Git ayarlarında **Branch: `kampagne`** → Speichern.
 3. Eklentiyi bu dalla güncelle (Plugin Build 2 dalın son hâlini çeker).
 4. **Henüz bereitstellen etme**: önce 2. ve 3. adım (kuponlar + ayarlar).
@@ -46,7 +46,7 @@ Notlar:
 
 ## 3. Eklenti ayarları (Lostmary test değerleri)
 
-Plugin-Set » VaporAktion2Test » **Konfiguration**.
+Plugin-Set » VaporAktion2 » **Konfiguration**.
 
 **Allgemein**
 
@@ -77,7 +77,7 @@ Kodları boş bırakılan grup kutuda görünmez (ör. yalnız ELFX test etmek i
 
 ## 4. Container bağlantıları
 
-Plugin-Set » VaporAktion2Test » **Container-Verknüpfungen** (eklenti varsayılanları getirir; kontrol et):
+Plugin-Set » VaporAktion2 » **Container-Verknüpfungen** (eklenti varsayılanları getirir; kontrol et):
 
 | Data Provider | Container |
 |---|---|
@@ -107,7 +107,7 @@ Mobil: tarayıcıda 360 px genişlikte de bak.
 | 10 | Hediye varken kuponu elle sil | Sonraki sepet değişiminde / sayfa yenilemede kupon geri gelir (ya da kasada tekrar uygulanır) |
 | 11 | Sızıntı: başka hesapla (ya da misafir) ELFX'i sepete koy, ELFX kodunu kupon alanına gir | Kupon **silinir** (bir sonraki sepet değişiminde, en geç kasada „Dein Warenkorb wurde angepasst …“) |
 | 12 | 4. adım durumunda sipariş ver (Vorkasse) | Siparişte ELFX satırı 16,99 €, kupon −16,99 €; stok **7880**'den düşer |
-| 13 | Daten » Log » Integration **VaporAktion2Test** | „Kunde hat ein Geschenk gewählt“, „Zu wenige Aktions-Artikel …“, „Aktions-Gutschein ohne Geschenk … entfernt“ satırları |
+| 13 | Daten » Log » Integration **VaporAktion2** | „Kunde hat ein Geschenk gewählt“, „Zu wenige Aktions-Artikel …“, „Aktions-Gutschein ohne Geschenk … entfernt“ satırları |
 
 Test siparişlerini sonra iptal et.
 

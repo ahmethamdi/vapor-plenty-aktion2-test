@@ -1,6 +1,6 @@
 <?php
 
-namespace VaporAktion2Test\Containers;
+namespace VaporAktion2\Containers;
 
 use Plenty\Plugin\Templates\Twig;
 
@@ -11,6 +11,6 @@ class GeschenkBoxVorschauContainer
 {
     public function call(Twig $twig, $arg = null): string
     {
-        return $twig->render('VaporAktion2Test::Container.Box', ['ort' => 'vorschau']);
+        return $twig->render('VaporAktion2::Container.Box', ['ort' => 'vorschau']);
     }
 }

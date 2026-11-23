@@ -1,9 +1,9 @@
 <?php
 
-namespace VaporAktion2Test\Listeners;
+namespace VaporAktion2\Listeners;
 
 use Plenty\Modules\Frontend\Events\ValidateCheckoutEvent;
-use VaporAktion2Test\Services\GeschenkService;
+use VaporAktion2\Services\GeschenkService;
 
 /**
  * ValidateCheckoutEvent (IO CheckoutService::preparePayment, sipariş öncesi): son kontrol.
@@ -18,7 +18,7 @@ class KasseListener
             /** @var GeschenkService $service */
             $service = pluginApp(GeschenkService::class);
             if ($service->pruefen('kasse')) {
-                $event->addErrorKey('VaporAktion2Test::Frontend.warenkorbAngepasst');
+                $event->addErrorKey('VaporAktion2::Frontend.warenkorbAngepasst');
             }
         } catch (\Throwable $ex) {
             // sessiz

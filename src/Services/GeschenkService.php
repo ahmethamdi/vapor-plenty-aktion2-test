@@ -1,6 +1,6 @@
 <?php
 
-namespace VaporAktion2Test\Services;
+namespace VaporAktion2\Services;
 
 use Plenty\Modules\Basket\Contracts\BasketItemRepositoryContract;
 use Plenty\Modules\Basket\Contracts\BasketRepositoryContract;
@@ -11,8 +11,8 @@ use Plenty\Modules\Webshop\Contracts\SessionStorageRepositoryContract;
 use Plenty\Plugin\ConfigRepository;
 use Plenty\Plugin\Log\Loggable;
 use Plenty\Plugin\Translation\Translator;
-use VaporAktion2Test\Helpers\Einstellungen;
-use VaporAktion2Test\Helpers\Regel;
+use VaporAktion2\Helpers\Einstellungen;
+use VaporAktion2\Helpers\Regel;
 
 /**
  * "6 Aktions-Artikel al → 1 hediye" kampanyasını Plenty sepetinde yürütür.
@@ -32,8 +32,8 @@ class GeschenkService
 {
     use Loggable;
 
-    const SESSION_SCHLUESSEL = 'VaporAktion2Test_geschenk';
-    const PLUGIN             = 'VaporAktion2Test';
+    const SESSION_SCHLUESSEL = 'VaporAktion2_geschenk';
+    const PLUGIN             = 'VaporAktion2';
 
     /** @var bool Kendi sepet işlemlerimiz yeni AfterBasketChanged ateşler → döngü kilidi */
     private $laeuft = false;
