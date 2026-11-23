@@ -1,9 +1,4 @@
-# Kurulum ve test — VaporAktion2Test 0.4.0 (dal `main`)
-
-> 0.4.0: yalnız **Aktion 2**. Aktion 1 ayrı eklenti (VaporAktion1, repo aktion-1-elfbargermany).
-> Dal: artık hep `main` (aşağıdaki 1. adımdaki `kampagne` notu eski; dal değiştirme gerekmez).
-
-# Aktion 2
+# Kurulum ve test — VaporAktion2Test 0.2.0 (dal `kampagne`)
 
 Kampanya: **6 Aktions-Artikel (ELFLIQ) al → 1 ELFLIQ ya da 1 ELFX Pod Kit hediye.**
 
@@ -140,9 +135,3 @@ Bilinen sınırlar:
 - Sepet/kupon: `BasketItemRepositoryContract` (all/update/remove), `BasketRepositoryContract::setCouponCode/removeCouponCode` (IO `CouponService` aynılarını çağırır), ekleme `IO\Services\BasketService::addBasketItem` (IO REST ile aynı yol).
 - REST: `GET/POST/DELETE /rest/vapor-aktion2/geschenk` (POST/DELETE `csrf` middleware'li; plentyShop `X-CSRF-TOKEN` gönderir). Yanıt `IO\Api\ApiResponse`: sepet olayları dönünce plentyShop Vuex sepeti kendisi günceller.
 - Seçenekler: `Plenty\Modules\Webshop\ItemSearch` — `isActive`, `isVisibleForClient`, `isSalable`, `hasPriceForCustomer`.
-
----
-
-<a id="aktion-1"></a>
-
-> Aktion 1 (3 ELFA Pods → ELFA Basisgerät) artık ayrı eklenti: **VaporAktion1**, repo github.com/ahmethamdi/aktion-1-elfbargermany.

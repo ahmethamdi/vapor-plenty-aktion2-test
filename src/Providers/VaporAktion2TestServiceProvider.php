@@ -12,7 +12,7 @@ use VaporAktion2Test\Services\GeschenkService;
 use VaporAktion2Test\Services\KatalogService;
 
 /**
- * Eklentinin giriş noktası: servisler, REST rotaları, sepet ve kasa olay dinleyicileri (Aktion 2).
+ * Eklentinin giriş noktası: servisler, REST rotaları, sepet ve kasa olay dinleyicileri.
  * Sepet kutusu ve script, plugin.json'daki dataProviders ile plentyShop LTS container'larına bağlanır.
  */
 class VaporAktion2TestServiceProvider extends ServiceProvider

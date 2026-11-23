@@ -1,19 +1,5 @@
 # Release notes for VaporAktion2Test
 
-## 0.4.0
-- Aktion 1 entfernt (jetzt eigenes Plugin VaporAktion1). Nur noch Aktion 2.
-
-## v0.3.0 (2026-11-20)
-
-### Added
-- **Promotion 1: "Buy 3 ELFA Pods, get 1 ELFA device free"** – independent of promotion 2: own config tab (`a1…`), REST route `/rest/vapor-aktion1/geschenk`, own boxes (cart, cart preview, optional item page), `aktion1.js` / `aktion1.css` (prefix `va1-`).
-- Device as a real line (single colour, 7.49 €) + own fixed-amount promotion coupon. Counts single flavours (line type 10) and unsplit bundles of the collective items (type 11, elfbargermany).
-- Not combinable with vouchers or promotion 2 (one coupon per cart).
-- Default: promotion 1 **off**, test mode on, coupon code empty → no behaviour change after deployment.
-
-### Unchanged
-- Promotion 2.
-
 ## v0.2.5 (2026-11-20)
 
 - If the CSRF token is missing on the page, the page is reloaded instead of sending a request without token (500 + logout).
